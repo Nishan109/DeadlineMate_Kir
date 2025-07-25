@@ -1,0 +1,493 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Target,
+  Calendar,
+  Clock,
+  CheckCircle,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Menu,
+  ArrowLeft,
+} from "lucide-react"
+import { signOut } from "../auth/actions"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  isToday,
+  isSameMonth,
+  addMonths,
+  subMonths,
+  parseISO,
+} from "date-fns"
+import { LoadingButton } from "@/components/loading-button"
+import { NotificationSystem } from "@/components/notification-system"
+import { createClient } from "@/utils/supabase/client"
+import Link from "next/link"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+
+interface Deadline {
+  id: string
+  title: string
+  description?: string
+  due_date: string
+  priority: "low" | "medium" | "high"
+  status: "pending" | "in_progress" | "completed" | "overdue"
+  category?: string
+  created_at: string
+  updated_at: string
+}
+
+interface UserProfile {
+  id: string
+  full_name?: string
+  avatar_url?: string
+  email: string
+}
+
+interface CalendarClientProps {
+  user: any
+  initialDeadlines: Deadline[]
+  isDemoMode?: boolean
+}
+
+export default function CalendarClient({ user, initialDeadlines, isDemoMode = false }: CalendarClientProps) {
+  const [deadlines, setDeadlines] = useState<Deadline[]>(initialDeadlines)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [currentProfile, setCurrentProfile] = useState<UserProfile>({
+    id: user.id,
+    email: user.email,
+    full_name: user.user_metadata?.full_name || "",
+    avatar_url: user.user_metadata?.avatar_url || "",
+  })
+
+  // Fetch current profile data
+  useEffect(() => {
+    const fetchCurrentProfile = async () => {
+      if (isDemoMode) {
+        setCurrentProfile({
+          id: user.id,
+          email: user.email,
+          full_name: "Demo User",
+          avatar_url: "/placeholder.svg?height=40&width=40",
+        })
+        return
+      }
+
+      try {
+        const supabase = createClient()
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .eq("id", user.id)
+          .single()
+
+        if (profile && !error) {
+          setCurrentProfile({
+            id: user.id,
+            email: user.email,
+            full_name: profile.full_name || user.user_metadata?.full_name || "",
+            avatar_url: profile.avatar_url || user.user_metadata?.avatar_url || "",
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+        setCurrentProfile({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || "",
+          avatar_url: user.user_metadata?.avatar_url || "",
+        })
+      }
+    }
+
+    fetchCurrentProfile()
+  }, [user, isDemoMode])
+
+  // Get display name and avatar
+  const displayName = currentProfile.full_name || currentProfile.email.split("@")[0] || "User"
+  const avatarFallback =
+    currentProfile.full_name?.charAt(0)?.toUpperCase() || currentProfile.email?.charAt(0)?.toUpperCase() || "U"
+
+  // Calendar calculations
+  const monthStart = startOfMonth(currentDate)
+  const monthEnd = endOfMonth(currentDate)
+  const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
+
+  // Get deadlines for a specific date
+  const getDeadlinesForDate = useCallback(
+    (date: Date) => {
+      return deadlines.filter((deadline) => isSameDay(parseISO(deadline.due_date), date))
+    },
+    [deadlines],
+  )
+
+  // Get priority color
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-500"
+      case "medium":
+        return "bg-orange-500"
+      case "low":
+        return "bg-green-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-emerald-500"
+      case "in_progress":
+        return "bg-blue-500"
+      case "overdue":
+        return "bg-red-600"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  // Navigation functions
+  const goToPreviousMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1))
+  }
+
+  const goToToday = () => {
+    setCurrentDate(new Date())
+    setSelectedDate(new Date())
+  }
+
+  // Sidebar content component
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 sm:p-6 border-b border-gray-200">
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+            <Target className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
+          </div>
+          <span className="text-lg sm:text-xl font-bold text-gray-900">DeadlineMate</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-3 sm:p-4">
+        <div className="space-y-1 sm:space-y-2">
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/dashboard">
+            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Dashboard</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start bg-emerald-50 text-emerald-700 h-10 sm:h-auto">
+            <Clock className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Calendar View</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/analytics">
+            <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Analytics</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/profile">
+            <Settings className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Profile Settings</span>
+          </LoadingButton>
+        </div>
+      </nav>
+    </>
+  )
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-64 p-0">
+          <div className="flex flex-col h-full">
+            <SidebarContent />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Navigation */}
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+              {/* Mobile Menu Button */}
+              <Button variant="ghost" size="sm" className="lg:hidden p-2" onClick={() => setSidebarOpen(true)}>
+                <Menu className="w-5 h-5" />
+              </Button>
+
+              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm" className="p-2 sm:px-3">
+                    <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline text-sm">Back to Dashboard</span>
+                  </Button>
+                </Link>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Calendar View</h1>
+                  <p className="text-xs sm:text-base text-gray-600 hidden sm:block">
+                    View your deadlines in calendar format
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1 sm:space-x-4">
+              {/* Notification System */}
+              <NotificationSystem userId={user.id} isDemoMode={isDemoMode} />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={currentProfile.avatar_url || "/placeholder.svg?height=32&width=32"}
+                        alt={`${displayName}'s avatar`}
+                      />
+                      <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
+                        {avatarFallback}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none truncate">{displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">{currentProfile.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center w-full">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <form action={signOut} className="w-full">
+                      <button type="submit" className="flex items-center w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </button>
+                    </form>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
+
+        {/* Calendar Content */}
+        <main className="flex-1 p-3 sm:p-6 overflow-auto">
+          {/* Demo Mode Alert */}
+          {isDemoMode && (
+            <Alert className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 text-sm">
+                <strong>Demo Mode:</strong> You're viewing sample data. Changes won't be saved.
+                <a href="/auth" className="underline ml-1">
+                  Set up real authentication
+                </a>{" "}
+                to save your deadlines.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Calendar Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" onClick={goToPreviousMonth} size="sm">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{format(currentDate, "MMMM yyyy")}</h2>
+              <Button variant="outline" onClick={goToNextMonth} size="sm">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button onClick={goToToday} className="bg-emerald-500 hover:bg-emerald-600 w-full sm:w-auto">
+              Today
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Calendar Grid */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader className="p-3 sm:p-6">
+                  <CardTitle className="text-sm sm:text-base">Calendar</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Click on a date to view deadlines</CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {/* Days of week header */}
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                      <div key={day} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar days */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarDays.map((day) => {
+                      const dayDeadlines = getDeadlinesForDate(day)
+                      const isSelected = selectedDate && isSameDay(day, selectedDate)
+                      const isTodayDate = isToday(day)
+                      const isCurrentMonth = isSameMonth(day, currentDate)
+
+                      return (
+                        <button
+                          key={day.toISOString()}
+                          onClick={() => setSelectedDate(day)}
+                          className={`
+                            p-1 sm:p-2 min-h-[40px] sm:min-h-[60px] border rounded-lg text-left transition-colors relative
+                            ${isSelected ? "bg-emerald-100 border-emerald-300" : "hover:bg-gray-50"}
+                            ${isTodayDate ? "bg-blue-50 border-blue-200" : ""}
+                            ${!isCurrentMonth ? "text-gray-400" : ""}
+                          `}
+                        >
+                          <div className="text-xs sm:text-sm font-medium">{format(day, "d")}</div>
+                          {dayDeadlines.length > 0 && (
+                            <div className="mt-1 space-y-1">
+                              {dayDeadlines.slice(0, 2).map((deadline) => (
+                                <div
+                                  key={deadline.id}
+                                  className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getPriorityColor(deadline.priority)}`}
+                                />
+                              ))}
+                              {dayDeadlines.length > 2 && (
+                                <div className="text-xs text-gray-500">+{dayDeadlines.length - 2}</div>
+                              )}
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Selected Date Details */}
+            <div>
+              <Card>
+                <CardHeader className="p-3 sm:p-6">
+                  <CardTitle className="text-sm sm:text-base">
+                    {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a Date"}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    {selectedDate ? "Deadlines for this date" : "Click on a calendar date to view deadlines"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {selectedDate ? (
+                    <div className="space-y-3 sm:space-y-4">
+                      {getDeadlinesForDate(selectedDate).length === 0 ? (
+                        <p className="text-gray-500 text-center py-6 sm:py-8 text-sm">No deadlines for this date</p>
+                      ) : (
+                        getDeadlinesForDate(selectedDate).map((deadline) => (
+                          <div key={deadline.id} className="border rounded-lg p-2 sm:p-3">
+                            <div className="flex items-start justify-between mb-1 sm:mb-2">
+                              <h4 className="font-medium text-xs sm:text-sm">{deadline.title}</h4>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${
+                                  deadline.priority === "high"
+                                    ? "border-red-200 text-red-700"
+                                    : deadline.priority === "medium"
+                                      ? "border-orange-200 text-orange-700"
+                                      : "border-green-200 text-green-700"
+                                }`}
+                              >
+                                {deadline.priority}
+                              </Badge>
+                            </div>
+                            {deadline.description && (
+                              <p className="text-xs text-gray-600 mb-1 sm:mb-2">{deadline.description}</p>
+                            )}
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="flex items-center text-gray-500">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {format(parseISO(deadline.due_date), "h:mm a")}
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs ${getStatusColor(deadline.status)} text-white`}
+                              >
+                                {deadline.status.replace("_", " ")}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 sm:py-8">
+                      <Calendar className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                      <p className="text-gray-500 text-sm">Select a date from the calendar to view deadlines</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Legend */}
+              <Card className="mt-3 sm:mt-4">
+                <CardHeader className="p-3 sm:p-6">
+                  <CardTitle className="text-xs sm:text-sm">Legend</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 sm:space-y-2 p-3 sm:p-6 pt-0">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-xs">High Priority</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-orange-500 rounded-full"></div>
+                    <span className="text-xs">Medium Priority</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-xs">Low Priority</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
