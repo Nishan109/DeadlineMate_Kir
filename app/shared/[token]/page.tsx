@@ -74,6 +74,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     }
   } catch (error) {
+    console.error("Error generating metadata:", error)
     return {
       title: "Shared Deadline - DeadlineMate",
       description: "View shared deadline details on DeadlineMate",
@@ -85,11 +86,31 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
   const supabase = createClient()
 
   try {
-    // Get shared deadline with deadline details
+    console.log("Looking for shared deadline with token:", params.token)
+
+    // First, let's check if the shared_deadlines table exists and has data
+    const { data: tableCheck, error: tableError } = await supabase.from("shared_deadlines").select("id").limit(1)
+
+    if (tableError) {
+      console.error("Table check error:", tableError)
+      notFound()
+    }
+
+    console.log("Table exists, found records:", tableCheck?.length || 0)
+
+    // Get shared deadline with deadline details using a more permissive query
     const { data: sharedDeadline, error } = await supabase
       .from("shared_deadlines")
       .select(`
-        *,
+        id,
+        deadline_id,
+        share_token,
+        created_by,
+        expires_at,
+        is_active,
+        view_count,
+        created_at,
+        updated_at,
         deadlines (
           id,
           title,
@@ -99,37 +120,52 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
           status,
           category,
           project_link,
-          created_at
+          created_at,
+          user_id
         )
       `)
       .eq("share_token", params.token)
       .eq("is_active", true)
       .single()
 
-    if (error || !sharedDeadline) {
+    console.log("Query result:", { data: sharedDeadline, error })
+
+    if (error) {
       console.error("Error fetching shared deadline:", error)
+      notFound()
+    }
+
+    if (!sharedDeadline) {
+      console.log("No shared deadline found")
       notFound()
     }
 
     // Check if expired
     if (sharedDeadline.expires_at && new Date(sharedDeadline.expires_at) < new Date()) {
+      console.log("Shared deadline has expired")
       notFound()
     }
-
-    // Increment view count
-    await supabase
-      .from("shared_deadlines")
-      .update({ view_count: (sharedDeadline.view_count || 0) + 1 })
-      .eq("id", sharedDeadline.id)
 
     const deadline = sharedDeadline.deadlines
     if (!deadline) {
+      console.log("No deadline data found")
       notFound()
     }
 
+    console.log("Successfully found deadline:", deadline.title)
+
+    // Increment view count (don't await to avoid blocking the page)
+    supabase
+      .from("shared_deadlines")
+      .update({ view_count: (sharedDeadline.view_count || 0) + 1 })
+      .eq("id", sharedDeadline.id)
+      .then(({ error }) => {
+        if (error) console.error("Error updating view count:", error)
+      })
+
     const dueDate = new Date(deadline.due_date)
     const now = new Date()
-    const isOverdue = dueDate < now
+    const isOverdue = dueDate < now && deadline.status !== "completed"
     const timeUntilDue = dueDate.getTime() - now.getTime()
     const daysUntilDue = Math.ceil(timeUntilDue / (1000 * 60 * 60 * 24))
 
@@ -194,12 +230,12 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-2xl font-bold text-gray-900 mb-2">{deadline.title}</CardTitle>
-                      <div className="flex items-center space-x-3 mb-4">
+                      <div className="flex items-center space-x-3 mb-4 flex-wrap">
                         <Badge className={`${getPriorityColor(deadline.priority)} border`}>
                           {deadline.priority} priority
                         </Badge>
-                        <Badge className={`${getStatusColor(deadline.status)} border`}>
-                          {deadline.status.replace("_", " ")}
+                        <Badge className={`${getStatusColor(isOverdue ? "overdue" : deadline.status)} border`}>
+                          {isOverdue ? "overdue" : deadline.status.replace("_", " ")}
                         </Badge>
                         {deadline.category && (
                           <Badge variant="outline" className="bg-gray-50">
@@ -243,7 +279,9 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                                   ? "Due today"
                                   : daysUntilDue === 1
                                     ? "Due tomorrow"
-                                    : `${daysUntilDue} days left`}
+                                    : daysUntilDue > 0
+                                      ? `${daysUntilDue} days left`
+                                      : "Past due"}
                               </p>
                             </div>
                           </div>

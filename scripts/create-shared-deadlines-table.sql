@@ -1,15 +1,27 @@
--- Create shared_deadlines table for sharing deadline links
-CREATE TABLE IF NOT EXISTS shared_deadlines (
+-- Drop existing table and policies if they exist
+DROP TABLE IF EXISTS shared_deadlines CASCADE;
+
+-- Create shared_deadlines table for deadline sharing functionality
+CREATE TABLE shared_deadlines (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    deadline_id UUID NOT NULL REFERENCES deadlines(id) ON DELETE CASCADE,
+    deadline_id UUID NOT NULL,
     share_token TEXT NOT NULL UNIQUE,
-    created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_by UUID NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
     view_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add foreign key constraints
+ALTER TABLE shared_deadlines 
+ADD CONSTRAINT fk_shared_deadlines_deadline 
+FOREIGN KEY (deadline_id) REFERENCES deadlines(id) ON DELETE CASCADE;
+
+ALTER TABLE shared_deadlines 
+ADD CONSTRAINT fk_shared_deadlines_user 
+FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_shared_deadlines_token ON shared_deadlines(share_token);
@@ -43,8 +55,8 @@ CREATE POLICY "Users can update their own shares" ON shared_deadlines
 CREATE POLICY "Users can delete their own shares" ON shared_deadlines
     FOR DELETE USING (created_by = auth.uid());
 
--- Policy for anonymous users to view active, non-expired shares (for public access)
-CREATE POLICY "Anonymous users can view active shares" ON shared_deadlines
+-- IMPORTANT: Policy for public access to shared deadlines (this allows the shared page to work)
+CREATE POLICY "Public can view active shared deadlines" ON shared_deadlines
     FOR SELECT USING (
         is_active = true AND
         (expires_at IS NULL OR expires_at > NOW())
@@ -82,6 +94,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create a scheduled job to clean up expired shares (if pg_cron is available)
--- This will run daily at midnight
--- SELECT cron.schedule('cleanup-expired-shares', '0 0 * * *', 'SELECT cleanup_expired_shares();');
+-- Insert some test data to verify the setup works
+-- This will be removed in production
+INSERT INTO shared_deadlines (deadline_id, share_token, created_by, expires_at, is_active)
+SELECT 
+    d.id,
+    'test-token-' || substr(md5(random()::text), 1, 8),
+    d.user_id,
+    NOW() + INTERVAL '7 days',
+    true
+FROM deadlines d
+LIMIT 1
+ON CONFLICT (share_token) DO NOTHING;

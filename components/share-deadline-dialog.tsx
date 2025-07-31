@@ -125,6 +125,8 @@ export default function ShareDeadlineDialog({
           return
         }
 
+        console.log("Creating share for deadline:", deadline.id, "by user:", user.id)
+
         // Check if the shared_deadlines table exists by trying to query it
         const { error: tableCheckError } = await supabase.from("shared_deadlines").select("id").limit(1)
 
@@ -146,6 +148,8 @@ export default function ShareDeadlineDialog({
         // Generate a secure token
         const shareToken = generateShareToken()
 
+        console.log("Generated share token:", shareToken)
+
         // Create shared deadline record with explicit user ID
         const { data, error } = await supabase
           .from("shared_deadlines")
@@ -158,6 +162,8 @@ export default function ShareDeadlineDialog({
           })
           .select()
           .single()
+
+        console.log("Insert result:", { data, error })
 
         if (error) {
           console.error("Error creating share link:", error)
@@ -192,6 +198,7 @@ export default function ShareDeadlineDialog({
         }
 
         const shareUrl = `${window.location.origin}/shared/${data.share_token}`
+        console.log("Generated share URL:", shareUrl)
         setShareUrl(shareUrl)
         setShareGenerated(true)
         toast({
