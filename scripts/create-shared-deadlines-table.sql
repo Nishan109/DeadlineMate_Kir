@@ -1,45 +1,81 @@
--- Create shared_deadlines table for sharing functionality
-CREATE TABLE IF NOT EXISTS shared_deadlines (
+-- Drop existing table and policies if they exist
+DROP TABLE IF EXISTS shared_deadlines CASCADE;
+
+-- Create shared_deadlines table for deadline sharing functionality
+CREATE TABLE shared_deadlines (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  deadline_id UUID REFERENCES deadlines ON DELETE CASCADE NOT NULL,
-  share_token TEXT UNIQUE NOT NULL,
-  created_by UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  deadline_id UUID NOT NULL,
+  share_token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   expires_at TIMESTAMP WITH TIME ZONE,
-  is_active BOOLEAN DEFAULT TRUE,
+  is_active BOOLEAN DEFAULT true,
   view_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+  created_by UUID DEFAULT auth.uid()
 );
 
--- Enable Row Level Security (RLS)
+-- Add foreign key constraint
+ALTER TABLE shared_deadlines 
+ADD CONSTRAINT fk_shared_deadlines_deadline 
+FOREIGN KEY (deadline_id) REFERENCES deadlines(id) ON DELETE CASCADE;
+
+ALTER TABLE shared_deadlines 
+ADD CONSTRAINT fk_shared_deadlines_user 
+FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_shared_deadlines_token ON shared_deadlines(share_token);
+CREATE INDEX IF NOT EXISTS idx_shared_deadlines_deadline_id ON shared_deadlines(deadline_id);
+CREATE INDEX IF NOT EXISTS idx_shared_deadlines_expires_at ON shared_deadlines(expires_at);
+CREATE INDEX IF NOT EXISTS idx_shared_deadlines_created_by ON shared_deadlines(created_by);
+
+-- Enable RLS
 ALTER TABLE shared_deadlines ENABLE ROW LEVEL SECURITY;
 
--- Create policies for shared_deadlines
-CREATE POLICY "Users can view own shared deadlines" ON shared_deadlines FOR SELECT USING (auth.uid() = created_by);
-CREATE POLICY "Users can insert own shared deadlines" ON shared_deadlines FOR INSERT WITH CHECK (auth.uid() = created_by);
-CREATE POLICY "Users can update own shared deadlines" ON shared_deadlines FOR UPDATE USING (auth.uid() = created_by);
-CREATE POLICY "Users can delete own shared deadlines" ON shared_deadlines FOR DELETE USING (auth.uid() = created_by);
+-- RLS Policies - Fixed to work with the correct user_id column
+CREATE POLICY "Users can create shares for their own deadlines" ON shared_deadlines
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL AND
+    EXISTS (
+      SELECT 1 FROM deadlines 
+      WHERE deadlines.id = deadline_id 
+      AND deadlines.user_id = auth.uid()
+    )
+  );
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS shared_deadlines_deadline_id_idx ON shared_deadlines(deadline_id);
-CREATE INDEX IF NOT EXISTS shared_deadlines_share_token_idx ON shared_deadlines(share_token);
-CREATE INDEX IF NOT EXISTS shared_deadlines_created_by_idx ON shared_deadlines(created_by);
-CREATE INDEX IF NOT EXISTS shared_deadlines_expires_at_idx ON shared_deadlines(expires_at);
+CREATE POLICY "Users can view their own shares" ON shared_deadlines
+  FOR SELECT USING (
+    created_by = auth.uid()
+  );
 
--- Create function to generate share token
-CREATE OR REPLACE FUNCTION generate_share_token()
-RETURNS TEXT AS $$
-BEGIN
-  RETURN encode(gen_random_bytes(16), 'base64url');
-END;
-$$ LANGUAGE plpgsql;
+CREATE POLICY "Users can update their own shares" ON shared_deadlines
+  FOR UPDATE USING (
+    created_by = auth.uid()
+  );
 
--- Create function to cleanup expired shares
+CREATE POLICY "Users can delete their own shares" ON shared_deadlines
+  FOR DELETE USING (
+    created_by = auth.uid()
+  );
+
+-- Public policy for viewing shared deadlines (for the shared page)
+CREATE POLICY "Anyone can view active, non-expired shares" ON shared_deadlines
+  FOR SELECT USING (
+    is_active = true 
+    AND (expires_at IS NULL OR expires_at > NOW())
+  );
+
+-- Function to cleanup expired shares
 CREATE OR REPLACE FUNCTION cleanup_expired_shares()
 RETURNS void AS $$
 BEGIN
-  DELETE FROM shared_deadlines 
+  UPDATE shared_deadlines 
+  SET is_active = false 
   WHERE expires_at IS NOT NULL 
-  AND expires_at < NOW();
+    AND expires_at < NOW() 
+    AND is_active = true;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Grant necessary permissions
+GRANT ALL ON shared_deadlines TO authenticated;
+GRANT ALL ON shared_deadlines TO anon;

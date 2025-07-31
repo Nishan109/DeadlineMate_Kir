@@ -29,6 +29,7 @@ import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { toast } from "@/hooks/use-toast"
 
 interface Deadline {
   id: string
@@ -48,6 +49,31 @@ interface ShareDeadlineDialogProps {
   onClose: () => void
   deadline: Deadline | null
   isDemoMode?: boolean
+}
+
+// Fallback function for generating random tokens
+function generateRandomToken(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let result = ""
+  for (let i = 0; i < 16; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+// Safe token generation with fallback
+function generateShareToken(): string {
+  try {
+    // Try to use crypto.randomUUID if available
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID().replace(/-/g, "").substring(0, 16)
+    }
+    // Fallback to Math.random based generation
+    return generateRandomToken()
+  } catch (error) {
+    console.warn("Failed to generate crypto UUID, using fallback:", error)
+    return generateRandomToken()
+  }
 }
 
 export default function ShareDeadlineDialog({
@@ -72,12 +98,32 @@ export default function ShareDeadlineDialog({
     try {
       if (isDemoMode) {
         // In demo mode, generate a mock share URL
-        const mockToken = Math.random().toString(36).substring(2, 15)
+        await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API delay
+        const mockToken = generateShareToken()
         const mockUrl = `${window.location.origin}/shared/${mockToken}`
         setShareUrl(mockUrl)
         setShareGenerated(true)
+        toast({
+          title: "Share link generated!",
+          description: "Your deadline share link is ready to use.",
+        })
       } else {
         const supabase = createClient()
+
+        // First, verify the user is authenticated
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          toast({
+            title: "Authentication required",
+            description: "Please log in to share deadlines.",
+            variant: "destructive",
+          })
+          return
+        }
 
         // Generate expiration date
         const expiresAt =
@@ -85,31 +131,63 @@ export default function ShareDeadlineDialog({
             ? null
             : new Date(Date.now() + Number.parseInt(expirationDays) * 24 * 60 * 60 * 1000)
 
-        // Create shared deadline record
+        // Generate a secure token
+        const shareToken = generateShareToken()
+
+        // Create shared deadline record with explicit user ID
         const { data, error } = await supabase
           .from("shared_deadlines")
           .insert({
             deadline_id: deadline.id,
-            share_token: crypto.randomUUID().replace(/-/g, "").substring(0, 16),
+            share_token: shareToken,
             expires_at: expiresAt?.toISOString(),
             is_active: true,
+            created_by: user.id, // Explicitly set the user ID
           })
           .select()
           .single()
 
         if (error) {
           console.error("Error creating share link:", error)
-          alert("Failed to create share link. Please try again.")
+
+          // Provide more specific error messages
+          if (error.message.includes("row-level security")) {
+            toast({
+              title: "Permission denied",
+              description: "You can only share your own deadlines.",
+              variant: "destructive",
+            })
+          } else if (error.message.includes("foreign key")) {
+            toast({
+              title: "Invalid deadline",
+              description: "The deadline you're trying to share doesn't exist.",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Failed to create share link",
+              description: error.message || "Please try again later.",
+              variant: "destructive",
+            })
+          }
           return
         }
 
         const shareUrl = `${window.location.origin}/shared/${data.share_token}`
         setShareUrl(shareUrl)
         setShareGenerated(true)
+        toast({
+          title: "Share link generated!",
+          description: "Your deadline share link is ready to use.",
+        })
       }
     } catch (error) {
       console.error("Error:", error)
-      alert("Failed to create share link. Please try again.")
+      toast({
+        title: "Failed to create share link",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -119,6 +197,10 @@ export default function ShareDeadlineDialog({
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
+      toast({
+        title: "Link copied!",
+        description: "Share link has been copied to your clipboard.",
+      })
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       console.error("Failed to copy:", error)
@@ -130,6 +212,10 @@ export default function ShareDeadlineDialog({
       document.execCommand("copy")
       document.body.removeChild(textArea)
       setCopied(true)
+      toast({
+        title: "Link copied!",
+        description: "Share link has been copied to your clipboard.",
+      })
       setTimeout(() => setCopied(false), 2000)
     }
   }
