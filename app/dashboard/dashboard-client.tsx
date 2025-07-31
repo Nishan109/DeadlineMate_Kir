@@ -32,11 +32,14 @@ import {
   Info,
   RefreshCw,
   Menu,
+  ExternalLink,
+  Share2,
 } from "lucide-react"
 import { signOut } from "../auth/actions"
 import AddDeadlineDialog from "./add-deadline-dialog"
 import EditDeadlineDialog from "./edit-deadline-dialog"
 import DeleteDeadlineDialog from "./delete-deadline-dialog"
+import ShareDeadlineDialog from "@/components/share-deadline-dialog"
 import { format, isToday, isThisWeek, isPast, isFuture } from "date-fns"
 import { LoadingButton } from "@/components/loading-button"
 import { NotificationSystem } from "@/components/notification-system"
@@ -54,6 +57,7 @@ interface Deadline {
   priority: "low" | "medium" | "high"
   status: "pending" | "in_progress" | "completed" | "overdue"
   category?: string
+  project_link?: string
   created_at: string
   updated_at: string
 }
@@ -76,6 +80,7 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [selectedDeadline, setSelectedDeadline] = useState<Deadline | null>(null)
   const [activeFilter, setActiveFilter] = useState("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -336,6 +341,13 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
     e.stopPropagation()
     setSelectedDeadline(deadline)
     setIsDeleteDialogOpen(true)
+  }, [])
+
+  const handleShareClick = useCallback((e: React.MouseEvent, deadline: Deadline) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedDeadline(deadline)
+    setIsShareDialogOpen(true)
   }, [])
 
   // Get display name and avatar
@@ -663,6 +675,10 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => handleShareClick(e, deadline)}>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => handleEditClick(e, deadline)}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
@@ -686,6 +702,18 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           {format(new Date(deadline.due_date), "h:mm a")}
                         </span>
+                        {deadline.project_link && (
+                          <a
+                            href={deadline.project_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                            <span className="underline">Project</span>
+                          </a>
+                        )}
                         {deadline.category && (
                           <Badge variant="outline" className="text-xs">
                             {deadline.category}
@@ -743,6 +771,16 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
         }}
         onDelete={handleDeleteDeadline}
         onRefresh={refreshDeadlines}
+        deadline={selectedDeadline}
+        isDemoMode={isDemoMode}
+      />
+
+      <ShareDeadlineDialog
+        isOpen={isShareDialogOpen}
+        onClose={() => {
+          setIsShareDialogOpen(false)
+          setSelectedDeadline(null)
+        }}
         deadline={selectedDeadline}
         isDemoMode={isDemoMode}
       />

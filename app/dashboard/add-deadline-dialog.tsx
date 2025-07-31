@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, CheckCircle } from "lucide-react"
+import { Calendar, Clock, CheckCircle, LinkIcon } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 
@@ -28,6 +28,7 @@ interface Deadline {
   priority: "low" | "medium" | "high"
   status: "pending" | "in_progress" | "completed" | "overdue"
   category?: string
+  project_link?: string
   created_at: string
   updated_at: string
 }
@@ -59,6 +60,7 @@ export default function AddDeadlineDialog({
     due_time: "",
     priority: "medium" as "low" | "medium" | "high",
     category: "",
+    project_link: "",
   })
 
   const resetForm = () => {
@@ -69,6 +71,7 @@ export default function AddDeadlineDialog({
       due_time: "",
       priority: "medium",
       category: "",
+      project_link: "",
     })
   }
 
@@ -92,6 +95,7 @@ export default function AddDeadlineDialog({
           priority: formData.priority,
           status: "pending",
           category: formData.category || undefined,
+          project_link: formData.project_link || undefined,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -120,6 +124,7 @@ export default function AddDeadlineDialog({
             priority: formData.priority,
             status: "pending",
             category: formData.category || null,
+            project_link: formData.project_link || null,
             user_id: userId,
           })
           .select()
@@ -167,123 +172,185 @@ export default function AddDeadlineDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="sm:max-w-[425px]"
+        className="w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => (isLoading || isRefreshing) && e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>Add New Deadline</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-semibold">Add New Deadline</DialogTitle>
+          <DialogDescription className="text-sm text-gray-600">
             Create a new deadline to track your important tasks.
             {isDemoMode && " (Demo mode - changes won't be saved)"}
           </DialogDescription>
         </DialogHeader>
 
         {showSuccess && (
-          <div className="flex items-center justify-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-emerald-600 mr-2" />
-            <span className="text-emerald-800 font-medium">
+          <div className="flex items-center justify-center p-3 mb-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 flex-shrink-0" />
+            <span className="text-emerald-800 font-medium text-sm">
               {isRefreshing ? "Refreshing dashboard..." : "Deadline created successfully!"}
             </span>
             {isRefreshing && <LoadingSpinner size="sm" className="ml-2" />}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              placeholder="Enter deadline title"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              required
-              disabled={isLoading || isRefreshing}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Add details about this deadline"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={3}
-              disabled={isLoading || isRefreshing}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date *</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="due_date"
-                  type="date"
-                  className="pl-10"
-                  value={formData.due_date}
-                  onChange={(e) => handleInputChange("due_date", e.target.value)}
-                  required
-                  disabled={isLoading || isRefreshing}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="due_time">Due Time</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="due_time"
-                  type="time"
-                  className="pl-10"
-                  value={formData.due_time}
-                  onChange={(e) => handleInputChange("due_time", e.target.value)}
-                  disabled={isLoading || isRefreshing}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => handleInputChange("priority", value)}
-                disabled={isLoading || isRefreshing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="title" className="text-sm font-medium">
+                Title *
+              </Label>
               <Input
-                id="category"
-                placeholder="e.g., Work, School, Personal"
-                value={formData.category}
-                onChange={(e) => handleInputChange("category", e.target.value)}
+                id="title"
+                placeholder="Enter deadline title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                required
                 disabled={isLoading || isRefreshing}
+                className="w-full"
               />
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading || isRefreshing}>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Add details about this deadline"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                rows={2}
+                disabled={isLoading || isRefreshing}
+                className="w-full resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="project_link" className="text-sm font-medium">
+                Project Link
+              </Label>
+              <div className="relative">
+                <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="project_link"
+                  type="url"
+                  className="pl-10 w-full"
+                  placeholder="https://github.com/user/project"
+                  value={formData.project_link}
+                  onChange={(e) => handleInputChange("project_link", e.target.value)}
+                  disabled={isLoading || isRefreshing}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Add a link to your project repository, design files, or related resources
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="due_date" className="text-sm font-medium">
+                  Due Date *
+                </Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="due_date"
+                    type="date"
+                    className="pl-10 w-full"
+                    value={formData.due_date}
+                    onChange={(e) => handleInputChange("due_date", e.target.value)}
+                    required
+                    disabled={isLoading || isRefreshing}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="due_time" className="text-sm font-medium">
+                  Due Time
+                </Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="due_time"
+                    type="time"
+                    className="pl-10 w-full"
+                    value={formData.due_time}
+                    onChange={(e) => handleInputChange("due_time", e.target.value)}
+                    disabled={isLoading || isRefreshing}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="priority" className="text-sm font-medium">
+                  Priority
+                </Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value) => handleInputChange("priority", value)}
+                  disabled={isLoading || isRefreshing}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                        Low
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                        Medium
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="high">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                        High
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-sm font-medium">
+                  Category
+                </Label>
+                <Input
+                  id="category"
+                  placeholder="e.g., Work, School, Personal"
+                  value={formData.category}
+                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  disabled={isLoading || isRefreshing}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <DialogFooter className="pt-4 border-t">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isLoading || isRefreshing}
+              className="w-full sm:w-auto bg-transparent"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-600"
+              onClick={handleSubmit}
+              className="bg-emerald-500 hover:bg-emerald-600 w-full sm:w-auto"
               disabled={isLoading || isRefreshing || showSuccess}
             >
               {isLoading ? (
@@ -300,8 +367,8 @@ export default function AddDeadlineDialog({
                 "Create Deadline"
               )}
             </Button>
-          </DialogFooter>
-        </form>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, CheckCircle } from "lucide-react"
+import { Calendar, Clock, CheckCircle, LinkIcon } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { format } from "date-fns"
@@ -29,6 +29,7 @@ interface Deadline {
   priority: "low" | "medium" | "high"
   status: "pending" | "in_progress" | "completed" | "overdue"
   category?: string
+  project_link?: string
   created_at: string
   updated_at: string
 }
@@ -61,6 +62,7 @@ export default function EditDeadlineDialog({
     priority: "medium" as "low" | "medium" | "high",
     status: "pending" as "pending" | "in_progress" | "completed" | "overdue",
     category: "",
+    project_link: "",
   })
 
   // Populate form when deadline changes
@@ -75,6 +77,7 @@ export default function EditDeadlineDialog({
         priority: deadline.priority,
         status: deadline.status,
         category: deadline.category || "",
+        project_link: deadline.project_link || "",
       })
     }
   }, [deadline])
@@ -99,6 +102,7 @@ export default function EditDeadlineDialog({
         priority: formData.priority,
         status: formData.status,
         category: formData.category || undefined,
+        project_link: formData.project_link || undefined,
         updated_at: new Date().toISOString(),
       }
 
@@ -127,6 +131,7 @@ export default function EditDeadlineDialog({
             priority: formData.priority,
             status: formData.status,
             category: formData.category || null,
+            project_link: formData.project_link || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", deadline.id)
@@ -175,141 +180,220 @@ export default function EditDeadlineDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="sm:max-w-[425px]"
+        className="w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => (isLoading || isRefreshing) && e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>Edit Deadline</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-semibold">Edit Deadline</DialogTitle>
+          <DialogDescription className="text-sm text-gray-600">
             Update your deadline information.
             {isDemoMode && " (Demo mode - changes won't be saved)"}
           </DialogDescription>
         </DialogHeader>
 
         {showSuccess && (
-          <div className="flex items-center justify-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-emerald-600 mr-2" />
-            <span className="text-emerald-800 font-medium">
+          <div className="flex items-center justify-center p-3 mb-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 flex-shrink-0" />
+            <span className="text-emerald-800 font-medium text-sm">
               {isRefreshing ? "Refreshing dashboard..." : "Deadline updated successfully!"}
             </span>
             {isRefreshing && <LoadingSpinner size="sm" className="ml-2" />}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-title">Title *</Label>
-            <Input
-              id="edit-title"
-              placeholder="Enter deadline title"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              required
-              disabled={isLoading || isRefreshing}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              placeholder="Add details about this deadline"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={3}
-              disabled={isLoading || isRefreshing}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-due_date">Due Date *</Label>
+              <Label htmlFor="edit-title" className="text-sm font-medium">
+                Title *
+              </Label>
+              <Input
+                id="edit-title"
+                placeholder="Enter deadline title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                required
+                disabled={isLoading || isRefreshing}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Add details about this deadline"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                rows={2}
+                disabled={isLoading || isRefreshing}
+                className="w-full resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-project_link" className="text-sm font-medium">
+                Project Link
+              </Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  id="edit-due_date"
-                  type="date"
-                  className="pl-10"
-                  value={formData.due_date}
-                  onChange={(e) => handleInputChange("due_date", e.target.value)}
-                  required
+                  id="edit-project_link"
+                  type="url"
+                  className="pl-10 w-full"
+                  placeholder="https://github.com/user/project"
+                  value={formData.project_link}
+                  onChange={(e) => handleInputChange("project_link", e.target.value)}
                   disabled={isLoading || isRefreshing}
                 />
+              </div>
+              <p className="text-xs text-gray-500">
+                Add a link to your project repository, design files, or related resources
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-due_date" className="text-sm font-medium">
+                  Due Date *
+                </Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="edit-due_date"
+                    type="date"
+                    className="pl-10 w-full"
+                    value={formData.due_date}
+                    onChange={(e) => handleInputChange("due_date", e.target.value)}
+                    required
+                    disabled={isLoading || isRefreshing}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-due_time" className="text-sm font-medium">
+                  Due Time
+                </Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="edit-due_time"
+                    type="time"
+                    className="pl-10 w-full"
+                    value={formData.due_time}
+                    onChange={(e) => handleInputChange("due_time", e.target.value)}
+                    disabled={isLoading || isRefreshing}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-priority" className="text-sm font-medium">
+                  Priority
+                </Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value) => handleInputChange("priority", value)}
+                  disabled={isLoading || isRefreshing}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                        Low
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                        Medium
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="high">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                        High
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-status" className="text-sm font-medium">
+                  Status
+                </Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleInputChange("status", value)}
+                  disabled={isLoading || isRefreshing}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-gray-500 mr-2"></div>
+                        Pending
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="in_progress">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                        In Progress
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                        Completed
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-due_time">Due Time</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  id="edit-due_time"
-                  type="time"
-                  className="pl-10"
-                  value={formData.due_time}
-                  onChange={(e) => handleInputChange("due_time", e.target.value)}
-                  disabled={isLoading || isRefreshing}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-priority">Priority</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => handleInputChange("priority", value)}
+              <Label htmlFor="edit-category" className="text-sm font-medium">
+                Category
+              </Label>
+              <Input
+                id="edit-category"
+                placeholder="e.g., Work, School, Personal"
+                value={formData.category}
+                onChange={(e) => handleInputChange("category", e.target.value)}
                 disabled={isLoading || isRefreshing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
+                className="w-full"
+              />
             </div>
+          </form>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
-                disabled={isLoading || isRefreshing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-category">Category</Label>
-            <Input
-              id="edit-category"
-              placeholder="e.g., Work, School, Personal"
-              value={formData.category}
-              onChange={(e) => handleInputChange("category", e.target.value)}
+        <DialogFooter className="pt-4 border-t">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
               disabled={isLoading || isRefreshing}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading || isRefreshing}>
+              className="w-full sm:w-auto bg-transparent"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-600"
+              onClick={handleSubmit}
+              className="bg-emerald-500 hover:bg-emerald-600 w-full sm:w-auto"
               disabled={isLoading || isRefreshing || showSuccess}
             >
               {isLoading ? (
@@ -326,8 +410,8 @@ export default function EditDeadlineDialog({
                 "Update Deadline"
               )}
             </Button>
-          </DialogFooter>
-        </form>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
