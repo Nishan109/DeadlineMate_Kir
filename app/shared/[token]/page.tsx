@@ -5,7 +5,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Calendar, Clock, ExternalLink, Share2, AlertCircle, CheckCircle2, Timer, User, ArrowRight } from "lucide-react"
+import {
+  Calendar,
+  Clock,
+  ExternalLink,
+  Share2,
+  AlertCircle,
+  CheckCircle2,
+  Timer,
+  User,
+  ArrowRight,
+  Target,
+} from "lucide-react"
 import Link from "next/link"
 import type { Metadata } from "next"
 
@@ -156,11 +167,11 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                  <Share2 className="w-5 h-5 text-white" />
+                  <Target className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Shared Deadline</h1>
-                  <p className="text-sm text-gray-600">Powered by DeadlineMate</p>
+                  <h1 className="text-xl font-semibold text-gray-900">DeadlineMate</h1>
+                  <p className="text-sm text-gray-600">Shared Deadline</p>
                 </div>
               </div>
               <Link href="/">

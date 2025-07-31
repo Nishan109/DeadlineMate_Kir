@@ -105,7 +105,7 @@ export default function ShareDeadlineDialog({
         setShareGenerated(true)
         toast({
           title: "Share link generated!",
-          description: "Your deadline share link is ready to use.",
+          description: "Your deadline share link is ready to use. (Demo mode - link won't be functional)",
         })
       } else {
         const supabase = createClient()
@@ -120,6 +120,18 @@ export default function ShareDeadlineDialog({
           toast({
             title: "Authentication required",
             description: "Please log in to share deadlines.",
+            variant: "destructive",
+          })
+          return
+        }
+
+        // Check if the shared_deadlines table exists by trying to query it
+        const { error: tableCheckError } = await supabase.from("shared_deadlines").select("id").limit(1)
+
+        if (tableCheckError && tableCheckError.message.includes("does not exist")) {
+          toast({
+            title: "Feature not available",
+            description: "The sharing feature is not yet set up. Please run the database migration first.",
             variant: "destructive",
           })
           return
@@ -161,6 +173,12 @@ export default function ShareDeadlineDialog({
             toast({
               title: "Invalid deadline",
               description: "The deadline you're trying to share doesn't exist.",
+              variant: "destructive",
+            })
+          } else if (error.message.includes("does not exist")) {
+            toast({
+              title: "Database not ready",
+              description: "Please run the database migration script first.",
               variant: "destructive",
             })
           } else {
