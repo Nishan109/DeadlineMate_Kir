@@ -16,6 +16,8 @@ import {
   User,
   ArrowRight,
   Target,
+  Database,
+  Bug,
 } from "lucide-react"
 import Link from "next/link"
 import type { Metadata } from "next"
@@ -28,9 +30,9 @@ interface PageProps {
 
 // Generate metadata for SEO and social sharing
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const supabase = createClient()
-
   try {
+    const supabase = createClient()
+
     // Get shared deadline info
     const { data: sharedDeadline } = await supabase
       .from("shared_deadlines")
@@ -85,21 +87,66 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SharedDeadlinePage({ params }: PageProps) {
   const supabase = createClient()
 
-  try {
-    console.log("Looking for shared deadline with token:", params.token)
+  // Debug information
+  const debugInfo = {
+    token: params.token,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  }
 
-    // First, let's check if the shared_deadlines table exists and has data
+  console.log("🔍 SharedDeadlinePage Debug Info:", debugInfo)
+
+  try {
+    // Step 1: Check if the shared_deadlines table exists
+    console.log("📋 Step 1: Checking if shared_deadlines table exists...")
+
     const { data: tableCheck, error: tableError } = await supabase.from("shared_deadlines").select("id").limit(1)
 
     if (tableError) {
-      console.error("Table check error:", tableError)
+      console.error("❌ Table check failed:", tableError)
+
+      // If table doesn't exist, show a helpful error page
+      if (tableError.message.includes("does not exist")) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full">
+              <CardHeader className="text-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Database className="w-6 h-6 text-red-600" />
+                </div>
+                <CardTitle className="text-red-900">Database Setup Required</CardTitle>
+                <CardDescription className="text-red-700">The sharing feature hasn't been set up yet.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="font-medium text-red-900 mb-2">Setup Instructions:</h4>
+                  <ol className="text-sm text-red-800 space-y-1 list-decimal list-inside">
+                    <li>Go to your Supabase dashboard</li>
+                    <li>Open the SQL Editor</li>
+                    <li>Run the setup-shared-deadlines-supabase.sql script</li>
+                    <li>Try accessing the shared link again</li>
+                  </ol>
+                </div>
+                <div className="flex space-x-2">
+                  <Link href="/" className="flex-1">
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Go to Homepage</Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+      }
+
       notFound()
     }
 
-    console.log("Table exists, found records:", tableCheck?.length || 0)
+    console.log("✅ Table exists, found", tableCheck?.length || 0, "records")
 
-    // Get shared deadline with deadline details using a more permissive query
-    const { data: sharedDeadline, error } = await supabase
+    // Step 2: Look for the specific shared deadline
+    console.log("🔍 Step 2: Looking for shared deadline with token:", params.token)
+
+    const { data: sharedDeadline, error: queryError } = await supabase
       .from("shared_deadlines")
       .select(`
         id,
@@ -128,41 +175,90 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       .eq("is_active", true)
       .single()
 
-    console.log("Query result:", { data: sharedDeadline, error })
+    console.log("📊 Query result:", {
+      found: !!sharedDeadline,
+      error: queryError?.message,
+      hasDeadline: !!sharedDeadline?.deadlines,
+    })
 
-    if (error) {
-      console.error("Error fetching shared deadline:", error)
+    if (queryError) {
+      console.error("❌ Query error:", queryError)
+
+      // Check if it's a permission error
+      if (queryError.message.includes("permission") || queryError.message.includes("policy")) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full">
+              <CardHeader className="text-center">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bug className="w-6 h-6 text-yellow-600" />
+                </div>
+                <CardTitle className="text-yellow-900">Permission Issue</CardTitle>
+                <CardDescription className="text-yellow-700">There's a database permission problem.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-900 mb-2">Debug Info:</h4>
+                  <div className="text-sm text-yellow-800 space-y-1">
+                    <p>
+                      <strong>Token:</strong> {params.token}
+                    </p>
+                    <p>
+                      <strong>Error:</strong> {queryError.message}
+                    </p>
+                    <p>
+                      <strong>Time:</strong> {new Date().toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Link href="/" className="flex-1">
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Go to Homepage</Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+      }
+
       notFound()
     }
 
     if (!sharedDeadline) {
-      console.log("No shared deadline found")
+      console.log("❌ No shared deadline found for token:", params.token)
       notFound()
     }
 
-    // Check if expired
+    // Step 3: Check if expired
     if (sharedDeadline.expires_at && new Date(sharedDeadline.expires_at) < new Date()) {
-      console.log("Shared deadline has expired")
+      console.log("⏰ Shared deadline has expired:", sharedDeadline.expires_at)
       notFound()
     }
 
+    // Step 4: Check if we have deadline data
     const deadline = sharedDeadline.deadlines
     if (!deadline) {
-      console.log("No deadline data found")
+      console.log("❌ No deadline data found for shared deadline")
       notFound()
     }
 
-    console.log("Successfully found deadline:", deadline.title)
+    console.log("✅ Successfully found deadline:", deadline.title)
 
-    // Increment view count (don't await to avoid blocking the page)
+    // Step 5: Increment view count (don't await to avoid blocking the page)
     supabase
       .from("shared_deadlines")
       .update({ view_count: (sharedDeadline.view_count || 0) + 1 })
       .eq("id", sharedDeadline.id)
       .then(({ error }) => {
-        if (error) console.error("Error updating view count:", error)
+        if (error) {
+          console.error("⚠️ Error updating view count:", error)
+        } else {
+          console.log("📈 View count updated successfully")
+        }
       })
 
+    // Calculate deadline status
     const dueDate = new Date(deadline.due_date)
     const now = new Date()
     const isOverdue = dueDate < now && deadline.status !== "completed"
@@ -429,7 +525,44 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       </div>
     )
   } catch (error) {
-    console.error("Error in SharedDeadlinePage:", error)
-    notFound()
+    console.error("💥 Unexpected error in SharedDeadlinePage:", error)
+
+    // Show a helpful error page for unexpected errors
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <CardTitle className="text-red-900">Something went wrong</CardTitle>
+            <CardDescription className="text-red-700">
+              An unexpected error occurred while loading this shared deadline.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h4 className="font-medium text-red-900 mb-2">Error Details:</h4>
+              <div className="text-sm text-red-800 space-y-1">
+                <p>
+                  <strong>Token:</strong> {params.token}
+                </p>
+                <p>
+                  <strong>Error:</strong> {error instanceof Error ? error.message : "Unknown error"}
+                </p>
+                <p>
+                  <strong>Time:</strong> {new Date().toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Link href="/" className="flex-1">
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Go to Homepage</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 }

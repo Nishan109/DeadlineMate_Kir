@@ -110,6 +110,8 @@ export default function ShareDeadlineDialog({
       } else {
         const supabase = createClient()
 
+        console.log("🔄 Starting share link generation process...")
+
         // First, verify the user is authenticated
         const {
           data: { user },
@@ -117,6 +119,7 @@ export default function ShareDeadlineDialog({
         } = await supabase.auth.getUser()
 
         if (authError || !user) {
+          console.error("❌ Authentication failed:", authError)
           toast({
             title: "Authentication required",
             description: "Please log in to share deadlines.",
@@ -125,12 +128,14 @@ export default function ShareDeadlineDialog({
           return
         }
 
-        console.log("Creating share for deadline:", deadline.id, "by user:", user.id)
+        console.log("✅ User authenticated:", user.id)
+        console.log("📋 Creating share for deadline:", deadline.id)
 
         // Check if the shared_deadlines table exists by trying to query it
         const { error: tableCheckError } = await supabase.from("shared_deadlines").select("id").limit(1)
 
         if (tableCheckError && tableCheckError.message.includes("does not exist")) {
+          console.error("❌ Table doesn't exist:", tableCheckError)
           toast({
             title: "Feature not available",
             description: "The sharing feature is not yet set up. Please run the database migration first.",
@@ -138,6 +143,8 @@ export default function ShareDeadlineDialog({
           })
           return
         }
+
+        console.log("✅ Table exists, proceeding with share creation")
 
         // Generate expiration date
         const expiresAt =
@@ -148,7 +155,8 @@ export default function ShareDeadlineDialog({
         // Generate a secure token
         const shareToken = generateShareToken()
 
-        console.log("Generated share token:", shareToken)
+        console.log("🔑 Generated share token:", shareToken)
+        console.log("⏰ Expiration:", expiresAt?.toISOString() || "Never")
 
         // Create shared deadline record with explicit user ID
         const { data, error } = await supabase
@@ -163,22 +171,22 @@ export default function ShareDeadlineDialog({
           .select()
           .single()
 
-        console.log("Insert result:", { data, error })
+        console.log("📊 Insert result:", { success: !!data, error: error?.message })
 
         if (error) {
-          console.error("Error creating share link:", error)
+          console.error("❌ Error creating share link:", error)
 
           // Provide more specific error messages
-          if (error.message.includes("row-level security")) {
+          if (error.message.includes("row-level security") || error.message.includes("policy")) {
             toast({
               title: "Permission denied",
-              description: "You can only share your own deadlines.",
+              description: "You can only share your own deadlines. Make sure you're the owner of this deadline.",
               variant: "destructive",
             })
           } else if (error.message.includes("foreign key")) {
             toast({
               title: "Invalid deadline",
-              description: "The deadline you're trying to share doesn't exist.",
+              description: "The deadline you're trying to share doesn't exist or has been deleted.",
               variant: "destructive",
             })
           } else if (error.message.includes("does not exist")) {
@@ -187,6 +195,11 @@ export default function ShareDeadlineDialog({
               description: "Please run the database migration script first.",
               variant: "destructive",
             })
+          } else if (error.message.includes("duplicate key") || error.message.includes("unique")) {
+            // If token collision (very rare), try again with a new token
+            console.log("🔄 Token collision detected, retrying...")
+            setTimeout(() => generateShareLink(), 100)
+            return
           } else {
             toast({
               title: "Failed to create share link",
@@ -197,8 +210,19 @@ export default function ShareDeadlineDialog({
           return
         }
 
+        if (!data) {
+          console.error("❌ No data returned from insert")
+          toast({
+            title: "Failed to create share link",
+            description: "No data was returned. Please try again.",
+            variant: "destructive",
+          })
+          return
+        }
+
         const shareUrl = `${window.location.origin}/shared/${data.share_token}`
-        console.log("Generated share URL:", shareUrl)
+        console.log("✅ Generated share URL:", shareUrl)
+
         setShareUrl(shareUrl)
         setShareGenerated(true)
         toast({
@@ -207,7 +231,7 @@ export default function ShareDeadlineDialog({
         })
       }
     } catch (error) {
-      console.error("Error:", error)
+      console.error("💥 Unexpected error:", error)
       toast({
         title: "Failed to create share link",
         description: "An unexpected error occurred. Please try again.",
