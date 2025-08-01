@@ -85,8 +85,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SharedDeadlinePage({ params }: PageProps) {
-  const supabase = createClient()
-
   // Debug information
   const debugInfo = {
     token: params.token,
@@ -97,16 +95,40 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
   console.log("🔍 SharedDeadlinePage Debug Info:", debugInfo)
 
   try {
+    // Initialize Supabase client
+    const supabase = createClient()
+
+    // Verify the client is properly initialized
+    if (!supabase) {
+      throw new Error("Failed to initialize Supabase client")
+    }
+
+    console.log("✅ Supabase client initialized successfully")
+
     // Step 1: Check if the shared_deadlines table exists
     console.log("📋 Step 1: Checking if shared_deadlines table exists...")
 
-    const { data: tableCheck, error: tableError } = await supabase.from("shared_deadlines").select("id").limit(1)
+    let tableCheck
+    let tableError
+
+    try {
+      const result = await supabase.from("shared_deadlines").select("id").limit(1)
+      tableCheck = result.data
+      tableError = result.error
+    } catch (err) {
+      console.error("❌ Table check failed with exception:", err)
+      tableError = err as any
+    }
 
     if (tableError) {
       console.error("❌ Table check failed:", tableError)
 
       // If table doesn't exist, show a helpful error page
-      if (tableError.message.includes("does not exist")) {
+      if (
+        tableError.message?.includes("does not exist") ||
+        tableError.message?.includes("relation") ||
+        tableError.code === "42P01"
+      ) {
         return (
           <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
             <Card className="max-w-md w-full">
@@ -127,6 +149,14 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                     <li>Try accessing the shared link again</li>
                   </ol>
                 </div>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Token:</strong> {params.token}
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    <strong>Error:</strong> {tableError.message}
+                  </p>
+                </div>
                 <div className="flex space-x-2">
                   <Link href="/" className="flex-1">
                     <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Go to Homepage</Button>
@@ -138,7 +168,8 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         )
       }
 
-      notFound()
+      // For other errors, show generic error
+      throw tableError
     }
 
     console.log("✅ Table exists, found", tableCheck?.length || 0, "records")
@@ -146,34 +177,45 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     // Step 2: Look for the specific shared deadline
     console.log("🔍 Step 2: Looking for shared deadline with token:", params.token)
 
-    const { data: sharedDeadline, error: queryError } = await supabase
-      .from("shared_deadlines")
-      .select(`
-        id,
-        deadline_id,
-        share_token,
-        created_by,
-        expires_at,
-        is_active,
-        view_count,
-        created_at,
-        updated_at,
-        deadlines (
+    let sharedDeadline
+    let queryError
+
+    try {
+      const result = await supabase
+        .from("shared_deadlines")
+        .select(`
           id,
-          title,
-          description,
-          due_date,
-          priority,
-          status,
-          category,
-          project_link,
+          deadline_id,
+          share_token,
+          created_by,
+          expires_at,
+          is_active,
+          view_count,
           created_at,
-          user_id
-        )
-      `)
-      .eq("share_token", params.token)
-      .eq("is_active", true)
-      .single()
+          updated_at,
+          deadlines (
+            id,
+            title,
+            description,
+            due_date,
+            priority,
+            status,
+            category,
+            project_link,
+            created_at,
+            user_id
+          )
+        `)
+        .eq("share_token", params.token)
+        .eq("is_active", true)
+        .single()
+
+      sharedDeadline = result.data
+      queryError = result.error
+    } catch (err) {
+      console.error("❌ Query failed with exception:", err)
+      queryError = err as any
+    }
 
     console.log("📊 Query result:", {
       found: !!sharedDeadline,
@@ -185,7 +227,11 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       console.error("❌ Query error:", queryError)
 
       // Check if it's a permission error
-      if (queryError.message.includes("permission") || queryError.message.includes("policy")) {
+      if (
+        queryError.message?.includes("permission") ||
+        queryError.message?.includes("policy") ||
+        queryError.code === "42501"
+      ) {
         return (
           <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex items-center justify-center p-4">
             <Card className="max-w-md w-full">
@@ -207,6 +253,9 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                       <strong>Error:</strong> {queryError.message}
                     </p>
                     <p>
+                      <strong>Code:</strong> {queryError.code}
+                    </p>
+                    <p>
                       <strong>Time:</strong> {new Date().toLocaleString()}
                     </p>
                   </div>
@@ -222,7 +271,14 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         )
       }
 
-      notFound()
+      // For "not found" errors, show the not found page
+      if (queryError.code === "PGRST116") {
+        console.log("❌ No shared deadline found for token:", params.token)
+        notFound()
+      }
+
+      // For other errors, throw to be caught by the outer try-catch
+      throw queryError
     }
 
     if (!sharedDeadline) {

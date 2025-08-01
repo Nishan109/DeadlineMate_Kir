@@ -108,9 +108,16 @@ export default function ShareDeadlineDialog({
           description: "Your deadline share link is ready to use. (Demo mode - link won't be functional)",
         })
       } else {
+        console.log("🔄 Starting share link generation process...")
+
+        // Initialize Supabase client
         const supabase = createClient()
 
-        console.log("🔄 Starting share link generation process...")
+        if (!supabase) {
+          throw new Error("Failed to initialize Supabase client")
+        }
+
+        console.log("✅ Supabase client initialized")
 
         // First, verify the user is authenticated
         const {
@@ -134,7 +141,10 @@ export default function ShareDeadlineDialog({
         // Check if the shared_deadlines table exists by trying to query it
         const { error: tableCheckError } = await supabase.from("shared_deadlines").select("id").limit(1)
 
-        if (tableCheckError && tableCheckError.message.includes("does not exist")) {
+        if (
+          tableCheckError &&
+          (tableCheckError.message?.includes("does not exist") || tableCheckError.code === "42P01")
+        ) {
           console.error("❌ Table doesn't exist:", tableCheckError)
           toast({
             title: "Feature not available",
@@ -177,25 +187,33 @@ export default function ShareDeadlineDialog({
           console.error("❌ Error creating share link:", error)
 
           // Provide more specific error messages
-          if (error.message.includes("row-level security") || error.message.includes("policy")) {
+          if (
+            error.message?.includes("row-level security") ||
+            error.message?.includes("policy") ||
+            error.code === "42501"
+          ) {
             toast({
               title: "Permission denied",
               description: "You can only share your own deadlines. Make sure you're the owner of this deadline.",
               variant: "destructive",
             })
-          } else if (error.message.includes("foreign key")) {
+          } else if (error.message?.includes("foreign key") || error.code === "23503") {
             toast({
               title: "Invalid deadline",
               description: "The deadline you're trying to share doesn't exist or has been deleted.",
               variant: "destructive",
             })
-          } else if (error.message.includes("does not exist")) {
+          } else if (error.message?.includes("does not exist") || error.code === "42P01") {
             toast({
               title: "Database not ready",
               description: "Please run the database migration script first.",
               variant: "destructive",
             })
-          } else if (error.message.includes("duplicate key") || error.message.includes("unique")) {
+          } else if (
+            error.message?.includes("duplicate key") ||
+            error.message?.includes("unique") ||
+            error.code === "23505"
+          ) {
             // If token collision (very rare), try again with a new token
             console.log("🔄 Token collision detected, retrying...")
             setTimeout(() => generateShareLink(), 100)
