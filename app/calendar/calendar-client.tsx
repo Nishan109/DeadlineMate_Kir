@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,6 +39,16 @@ import {
   addMonths,
   subMonths,
   parseISO,
+  startOfDay,
+  endOfDay,
+  isWithinInterval,
+  addDays,
+  subDays,
+  getDay,
+  isBefore,
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
 } from "date-fns"
 import { LoadingButton } from "@/components/loading-button"
 import { NotificationSystem } from "@/components/notification-system"
@@ -82,6 +92,31 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
     full_name: user.user_metadata?.full_name || "",
     avatar_url: user.user_metadata?.avatar_url || "",
   })
+
+  // Enhanced deadline processing with accurate status calculation
+  const processedDeadlines = useMemo(() => {
+    const now = new Date()
+
+    return deadlines.map((deadline) => {
+      const dueDate = parseISO(deadline.due_date)
+      let calculatedStatus = deadline.status
+
+      // Auto-calculate overdue status for non-completed deadlines
+      if (deadline.status !== "completed" && isBefore(dueDate, now)) {
+        calculatedStatus = "overdue"
+      }
+
+      return {
+        ...deadline,
+        status: calculatedStatus,
+        dueDate, // Pre-parsed date for performance
+        isToday: isToday(dueDate),
+        isOverdue: deadline.status !== "completed" && isBefore(dueDate, now),
+        timeUntilDue: differenceInMinutes(dueDate, now),
+        daysUntilDue: differenceInDays(dueDate, startOfDay(now)),
+      }
+    })
+  }, [deadlines])
 
   // Fetch current profile data
   useEffect(() => {
@@ -131,21 +166,49 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
   const avatarFallback =
     currentProfile.full_name?.charAt(0)?.toUpperCase() || currentProfile.email?.charAt(0)?.toUpperCase() || "U"
 
-  // Calendar calculations
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(currentDate)
-  const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
+  // Enhanced calendar calculations with proper week handling
+  const calendarData = useMemo(() => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
 
-  // Get deadlines for a specific date
+    // Get the first day of the calendar (including previous month days)
+    const calendarStart = subDays(monthStart, getDay(monthStart))
+    // Get the last day of the calendar (including next month days)
+    const calendarEnd = addDays(monthEnd, 6 - getDay(monthEnd))
+
+    const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
+
+    return {
+      monthStart,
+      monthEnd,
+      calendarDays,
+      currentMonthName: format(currentDate, "MMMM yyyy"),
+    }
+  }, [currentDate])
+
+  // Enhanced deadline filtering for specific dates with accurate time handling
   const getDeadlinesForDate = useCallback(
     (date: Date) => {
-      return deadlines.filter((deadline) => isSameDay(parseISO(deadline.due_date), date))
+      const dayStart = startOfDay(date)
+      const dayEnd = endOfDay(date)
+
+      return processedDeadlines
+        .filter((deadline) => isWithinInterval(deadline.dueDate, { start: dayStart, end: dayEnd }))
+        .sort((a, b) => {
+          // Sort by time within the day, then by priority
+          const timeCompare = a.dueDate.getTime() - b.dueDate.getTime()
+          if (timeCompare !== 0) return timeCompare
+
+          // Priority sorting: high -> medium -> low
+          const priorityOrder = { high: 3, medium: 2, low: 1 }
+          return priorityOrder[b.priority] - priorityOrder[a.priority]
+        })
     },
-    [deadlines],
+    [processedDeadlines],
   )
 
-  // Get priority color
-  const getPriorityColor = (priority: string) => {
+  // Enhanced priority and status color functions
+  const getPriorityColor = useCallback((priority: string) => {
     switch (priority) {
       case "high":
         return "bg-red-500"
@@ -156,35 +219,108 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
       default:
         return "bg-gray-500"
     }
-  }
+  }, [])
 
-  // Get status color
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-500"
+        return "bg-emerald-500 text-white"
       case "in_progress":
-        return "bg-blue-500"
+        return "bg-blue-500 text-white"
       case "overdue":
-        return "bg-red-600"
+        return "bg-red-600 text-white"
+      case "pending":
+        return "bg-gray-500 text-white"
       default:
-        return "bg-gray-500"
+        return "bg-gray-500 text-white"
     }
-  }
+  }, [])
+
+  // Enhanced deadline badge with more accurate time calculations
+  const getDeadlineBadge = useCallback((deadline: any) => {
+    const now = new Date()
+    const dueDate = deadline.dueDate
+
+    if (deadline.status === "completed") {
+      return (
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
+          ✓ Completed
+        </Badge>
+      )
+    }
+
+    if (deadline.isOverdue) {
+      const hoursOverdue = Math.abs(differenceInHours(now, dueDate))
+      const daysOverdue = Math.abs(differenceInDays(now, dueDate))
+
+      return (
+        <Badge variant="destructive" className="text-xs">
+          {daysOverdue > 0 ? `${daysOverdue}d overdue` : `${hoursOverdue}h overdue`}
+        </Badge>
+      )
+    }
+
+    if (deadline.isToday) {
+      const hoursUntil = Math.max(0, differenceInHours(dueDate, now))
+      return (
+        <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
+          {hoursUntil > 0 ? `${hoursUntil}h left` : "Due now"}
+        </Badge>
+      )
+    }
+
+    if (deadline.daysUntilDue <= 7 && deadline.daysUntilDue > 0) {
+      return (
+        <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs">
+          {deadline.daysUntilDue === 1 ? "Tomorrow" : `${deadline.daysUntilDue} days`}
+        </Badge>
+      )
+    }
+
+    return (
+      <Badge variant="outline" className="text-xs">
+        {format(dueDate, "MMM dd")}
+      </Badge>
+    )
+  }, [])
 
   // Navigation functions
-  const goToPreviousMonth = () => {
+  const goToPreviousMonth = useCallback(() => {
     setCurrentDate(subMonths(currentDate, 1))
-  }
+  }, [currentDate])
 
-  const goToNextMonth = () => {
+  const goToNextMonth = useCallback(() => {
     setCurrentDate(addMonths(currentDate, 1))
-  }
+  }, [currentDate])
 
-  const goToToday = () => {
-    setCurrentDate(new Date())
-    setSelectedDate(new Date())
-  }
+  const goToToday = useCallback(() => {
+    const today = new Date()
+    setCurrentDate(today)
+    setSelectedDate(today)
+  }, [])
+
+  // Enhanced selected date deadlines with better sorting
+  const selectedDateDeadlines = useMemo(() => {
+    if (!selectedDate) return []
+
+    const deadlinesForDate = getDeadlinesForDate(selectedDate)
+
+    // Group by status for better organization
+    const grouped = deadlinesForDate.reduce(
+      (acc, deadline) => {
+        const status = deadline.status
+        if (!acc[status]) acc[status] = []
+        acc[status].push(deadline)
+        return acc
+      },
+      {} as Record<string, typeof deadlinesForDate>,
+    )
+
+    // Order: overdue, pending, in_progress, completed
+    const statusOrder = ["overdue", "pending", "in_progress", "completed"]
+
+    return statusOrder.flatMap((status) => grouped[status] || [])
+  }, [selectedDate, getDeadlinesForDate])
 
   // Sidebar content component
   const SidebarContent = () => (
@@ -333,7 +469,7 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
               <Button variant="outline" onClick={goToPreviousMonth} size="sm">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{format(currentDate, "MMMM yyyy")}</h2>
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{calendarData.currentMonthName}</h2>
               <Button variant="outline" onClick={goToNextMonth} size="sm">
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -363,11 +499,20 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
 
                   {/* Calendar days */}
                   <div className="grid grid-cols-7 gap-1">
-                    {calendarDays.map((day) => {
+                    {calendarData.calendarDays.map((day) => {
                       const dayDeadlines = getDeadlinesForDate(day)
                       const isSelected = selectedDate && isSameDay(day, selectedDate)
                       const isTodayDate = isToday(day)
                       const isCurrentMonth = isSameMonth(day, currentDate)
+
+                      // Count deadlines by status for better visual indicators
+                      const statusCounts = dayDeadlines.reduce(
+                        (acc, deadline) => {
+                          acc[deadline.status] = (acc[deadline.status] || 0) + 1
+                          return acc
+                        },
+                        {} as Record<string, number>,
+                      )
 
                       return (
                         <button
@@ -377,20 +522,43 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
                             p-1 sm:p-2 min-h-[40px] sm:min-h-[60px] border rounded-lg text-left transition-colors relative
                             ${isSelected ? "bg-emerald-100 border-emerald-300" : "hover:bg-gray-50"}
                             ${isTodayDate ? "bg-blue-50 border-blue-200" : ""}
-                            ${!isCurrentMonth ? "text-gray-400" : ""}
+                            ${!isCurrentMonth ? "text-gray-400 bg-gray-50/50" : ""}
                           `}
                         >
-                          <div className="text-xs sm:text-sm font-medium">{format(day, "d")}</div>
+                          <div className={`text-xs sm:text-sm font-medium ${isTodayDate ? "text-blue-700" : ""}`}>
+                            {format(day, "d")}
+                          </div>
                           {dayDeadlines.length > 0 && (
                             <div className="mt-1 space-y-1">
-                              {dayDeadlines.slice(0, 2).map((deadline) => (
-                                <div
-                                  key={deadline.id}
-                                  className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getPriorityColor(deadline.priority)}`}
-                                />
-                              ))}
-                              {dayDeadlines.length > 2 && (
-                                <div className="text-xs text-gray-500">+{dayDeadlines.length - 2}</div>
+                              {/* Show status indicators */}
+                              <div className="flex flex-wrap gap-0.5">
+                                {statusCounts.overdue > 0 && (
+                                  <div
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-600"
+                                    title={`${statusCounts.overdue} overdue`}
+                                  />
+                                )}
+                                {statusCounts.pending > 0 && (
+                                  <div
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500"
+                                    title={`${statusCounts.pending} pending`}
+                                  />
+                                )}
+                                {statusCounts.in_progress > 0 && (
+                                  <div
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500"
+                                    title={`${statusCounts.in_progress} in progress`}
+                                  />
+                                )}
+                                {statusCounts.completed > 0 && (
+                                  <div
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500"
+                                    title={`${statusCounts.completed} completed`}
+                                  />
+                                )}
+                              </div>
+                              {dayDeadlines.length > 4 && (
+                                <div className="text-xs text-gray-500">+{dayDeadlines.length - 4}</div>
                               )}
                             </div>
                           )}
@@ -410,16 +578,24 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
                     {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a Date"}
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    {selectedDate ? "Deadlines for this date" : "Click on a calendar date to view deadlines"}
+                    {selectedDate ? (
+                      <>
+                        {selectedDateDeadlines.length} deadline{selectedDateDeadlines.length !== 1 ? "s" : ""} for this
+                        date
+                        {selectedDate && isToday(selectedDate) && " (Today)"}
+                      </>
+                    ) : (
+                      "Click on a calendar date to view deadlines"
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0">
                   {selectedDate ? (
                     <div className="space-y-3 sm:space-y-4">
-                      {getDeadlinesForDate(selectedDate).length === 0 ? (
+                      {selectedDateDeadlines.length === 0 ? (
                         <p className="text-gray-500 text-center py-6 sm:py-8 text-sm">No deadlines for this date</p>
                       ) : (
-                        getDeadlinesForDate(selectedDate).map((deadline) => (
+                        selectedDateDeadlines.map((deadline) => (
                           <div key={deadline.id} className="border rounded-lg p-2 sm:p-3">
                             <div className="flex items-start justify-between mb-1 sm:mb-2">
                               <h4 className="font-medium text-xs sm:text-sm">{deadline.title}</h4>
@@ -442,15 +618,14 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
                             <div className="flex items-center justify-between text-xs">
                               <span className="flex items-center text-gray-500">
                                 <Clock className="w-3 h-3 mr-1" />
-                                {format(parseISO(deadline.due_date), "h:mm a")}
+                                {format(deadline.dueDate, "h:mm a")}
                               </span>
-                              <Badge
-                                variant="secondary"
-                                className={`text-xs ${getStatusColor(deadline.status)} text-white`}
-                              >
+                              <Badge variant="secondary" className={`text-xs ${getStatusColor(deadline.status)}`}>
                                 {deadline.status.replace("_", " ")}
                               </Badge>
                             </div>
+                            {/* Enhanced deadline badge */}
+                            <div className="mt-2">{getDeadlineBadge(deadline)}</div>
                           </div>
                         ))
                       )}
@@ -464,23 +639,27 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
                 </CardContent>
               </Card>
 
-              {/* Legend */}
+              {/* Enhanced Legend */}
               <Card className="mt-3 sm:mt-4">
                 <CardHeader className="p-3 sm:p-6">
                   <CardTitle className="text-xs sm:text-sm">Legend</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 sm:space-y-2 p-3 sm:p-6 pt-0">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-xs">High Priority</span>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-600 rounded-full"></div>
+                    <span className="text-xs">Overdue</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 sm:w-3 sm:h-3 bg-orange-500 rounded-full"></div>
-                    <span className="text-xs">Medium Priority</span>
+                    <span className="text-xs">Pending</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-xs">Low Priority</span>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-xs">In Progress</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-emerald-500 rounded-full"></div>
+                    <span className="text-xs">Completed</span>
                   </div>
                 </CardContent>
               </Card>

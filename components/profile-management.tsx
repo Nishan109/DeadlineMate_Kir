@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -313,10 +312,6 @@ export function ProfileManagement({ user, isDemoMode = false }: ProfileManagemen
       phone: profile.phone,
       location: profile.location,
       bio: profile.bio,
-      timezone: profile.timezone,
-      date_format: profile.date_format,
-      theme: profile.theme,
-      language: profile.language,
     })
   }
 
@@ -439,9 +434,8 @@ export function ProfileManagement({ user, isDemoMode = false }: ProfileManagemen
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="data">Data & Privacy</TabsTrigger>
         </TabsList>
@@ -556,142 +550,6 @@ export function ProfileManagement({ user, isDemoMode = false }: ProfileManagemen
                     </>
                   )}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Display Preferences</CardTitle>
-              <CardDescription>Customize how DeadlineMate looks and behaves</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Theme</Label>
-                  <Select
-                    value={profile.theme}
-                    onValueChange={(value) => setProfile((prev) => ({ ...prev, theme: value as any }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Language</Label>
-                  <Select
-                    value={profile.language}
-                    onValueChange={(value) => setProfile((prev) => ({ ...prev, language: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Timezone</Label>
-                  <Select
-                    value={profile.timezone}
-                    onValueChange={(value) => setProfile((prev) => ({ ...prev, timezone: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                      <SelectItem value="Europe/London">London</SelectItem>
-                      <SelectItem value="Europe/Paris">Paris</SelectItem>
-                      <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Date Format</Label>
-                  <Select
-                    value={profile.date_format}
-                    onValueChange={(value) => setProfile((prev) => ({ ...prev, date_format: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MM/dd/yyyy">MM/DD/YYYY</SelectItem>
-                      <SelectItem value="dd/MM/yyyy">DD/MM/YYYY</SelectItem>
-                      <SelectItem value="yyyy-MM-dd">YYYY-MM-DD</SelectItem>
-                      <SelectItem value="MMM dd, yyyy">MMM DD, YYYY</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button onClick={handleSaveProfile} disabled={isSaving} className="bg-emerald-500 hover:bg-emerald-600">
-                  {isSaving ? (
-                    <>
-                      <LoadingSpinner size="sm" />
-                      <span className="ml-2">Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Preferences
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Shortcuts and productivity features</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Keyboard Shortcuts</Label>
-                  <p className="text-sm text-gray-500">Enable keyboard shortcuts for faster navigation</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Auto-save</Label>
-                  <p className="text-sm text-gray-500">Automatically save changes as you type</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Smart Suggestions</Label>
-                  <p className="text-sm text-gray-500">Get AI-powered deadline suggestions</p>
-                </div>
-                <Switch />
               </div>
             </CardContent>
           </Card>
