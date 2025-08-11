@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@/utils/supabase/client"
 import type { User } from "@supabase/auth-helpers-nextjs"
 import { Calendar, Plus, Search, ChevronLeft, ChevronRight, Settings, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { AddActivityDialog } from "@/components/timetable/add-activity-dialog"
 import { EditActivityDialog } from "@/components/timetable/edit-activity-dialog"
 import { CurrentActivityCard } from "@/components/timetable/current-activity-card"
 import { NextActivityCard } from "@/components/timetable/next-activity-card"
+import { v4 as uuidv4 } from "uuid"
 
 interface Profile {
   id: string
@@ -75,7 +76,11 @@ interface NextActivity extends CurrentActivity {
 
 interface TimetableClientProps {
   user: User
+  profile: Profile
   initialTimetables: Timetable[]
+  initialActivities: Activity[]
+  initialSchedules: ActivitySchedule[]
+  isDemoMode: boolean
 }
 
 const DAYS_OF_WEEK = [
@@ -107,38 +112,51 @@ const FILTER_TABS = [
   { label: "Personal", value: "personal" },
 ]
 
-export function TimetableClient({ user, initialTimetables = [] }: TimetableClientProps) {
+export function TimetableClient({
+  user,
+  profile,
+  initialTimetables = [],
+  initialActivities = [],
+  initialSchedules = [],
+  isDemoMode = false,
+}: TimetableClientProps) {
   const [timetables, setTimetables] = useState<Timetable[]>(initialTimetables)
-  const [activities, setActivities] = useState<Activity[]>([])
+  const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [currentActivity, setCurrentActivity] = useState<CurrentActivity | null>(null)
   const [nextActivity, setNextActivity] = useState<NextActivity | null>(null)
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay())
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isDemo, setIsDemo] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<string>("all")
+  const [isDemo, setIsDemo] = useState(isDemoMode)
 
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
-  // Create default timetable when none exists
-  const currentTimetable = timetables.find((t) => t.is_active) ||
-    timetables[0] || {
-      id: "default-timetable",
-      user_id: user.id,
+  const generateUUID = () => uuidv4()
+
+  const currentTimetable = useMemo(() => {
+    if (timetables.length > 0) {
+      return timetables.find((t) => t.is_active) || timetables[0]
+    }
+
+    return {
+      id: generateUUID(),
+      user_id: user?.id || "demo-user",
       name: "My Timetable",
       description: "Default timetable",
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
+  }, [timetables, user])
 
   const demoActivities: Activity[] = [
     {
-      id: "demo-1",
-      timetable_id: "demo-timetable",
+      id: generateUUID(),
+      timetable_id: generateUUID(),
       title: "Morning Workout",
       description: "Daily exercise routine",
       category: "Health",
@@ -148,8 +166,8 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
       updated_at: new Date().toISOString(),
       schedules: [
         {
-          id: "demo-schedule-1",
-          activity_id: "demo-1",
+          id: generateUUID(),
+          activity_id: generateUUID(),
           day_of_week: 1,
           start_time: "07:00",
           end_time: "08:00",
@@ -163,8 +181,8 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
       ],
     },
     {
-      id: "demo-2",
-      timetable_id: "demo-timetable",
+      id: generateUUID(),
+      timetable_id: generateUUID(),
       title: "Team Meeting",
       description: "Weekly team sync",
       category: "Work",
@@ -174,8 +192,8 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
       updated_at: new Date().toISOString(),
       schedules: [
         {
-          id: "demo-schedule-2",
-          activity_id: "demo-2",
+          id: generateUUID(),
+          activity_id: generateUUID(),
           day_of_week: 1,
           start_time: "10:00",
           end_time: "11:00",
@@ -190,19 +208,39 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
     },
   ]
 
-  // Initialize timetables with proper error handling
   useEffect(() => {
     const initializeTimetables = async () => {
+      if (!user?.id) {
+        console.log("No authenticated user, using demo mode")
+        setIsDemo(true)
+        setActivities(demoActivities)
+        setLoading(false)
+        return
+      }
+
       if (initialTimetables.length === 0) {
         try {
+          const {
+            data: { user: currentUser },
+            error: authError,
+          } = await supabase.auth.getUser()
+
+          if (authError || !currentUser) {
+            console.log("Authentication failed, using demo mode")
+            setIsDemo(true)
+            setActivities(demoActivities)
+            setLoading(false)
+            return
+          }
+
           const { data, error } = await supabase
             .from("timetables")
             .select("*")
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .order("created_at", { ascending: false })
 
           if (error) {
-            console.log("Database not available, using demo mode")
+            console.log("Database not available, using demo mode:", error)
             setIsDemo(true)
             setActivities(demoActivities)
             setLoading(false)
@@ -212,26 +250,34 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
           if (data && data.length > 0) {
             setTimetables(data)
           } else {
-            const { data: newTimetable, error: createError } = await supabase
-              .from("timetables")
-              .insert({
-                user_id: user.id,
-                name: "My Timetable",
-                description: "Default timetable",
-                is_active: true,
-              })
-              .select()
-              .single()
+            try {
+              const { data: newTimetable, error: createError } = await supabase
+                .from("timetables")
+                .insert({
+                  user_id: currentUser.id,
+                  name: "My Timetable",
+                  description: "Default timetable",
+                  is_active: true,
+                })
+                .select()
+                .single()
 
-            if (createError) {
-              console.log("Cannot create timetable, using demo mode")
+              if (createError) {
+                console.log("Cannot create timetable (RLS policy), using demo mode:", createError)
+                setIsDemo(true)
+                setActivities(demoActivities)
+                setLoading(false)
+                return
+              }
+
+              setTimetables([newTimetable])
+            } catch (createError) {
+              console.log("RLS policy violation, using demo mode:", createError)
               setIsDemo(true)
               setActivities(demoActivities)
               setLoading(false)
               return
             }
-
-            setTimetables([newTimetable])
           }
         } catch (error) {
           console.log("Database error, using demo mode:", error)
@@ -246,6 +292,8 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
         loadActivities()
         loadCurrentAndNextActivity()
       }
+
+      setLoading(false)
     }
 
     initializeTimetables()
@@ -262,9 +310,20 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
   }, [currentTimetable, isDemo])
 
   const loadActivities = async () => {
-    if (!currentTimetable) return
+    if (!currentTimetable?.id || isDemo) return
 
     try {
+      const {
+        data: { user: currentUser },
+        error: authError,
+      } = await supabase.auth.getUser()
+
+      if (authError || !currentUser) {
+        setIsDemo(true)
+        setActivities(demoActivities)
+        return
+      }
+
       const { data, error } = await supabase
         .from("activities")
         .select(`
@@ -275,48 +334,42 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
         .order("created_at", { ascending: false })
 
       if (error) {
-        if (error.code === "42P01") {
-          console.log("Timetable tables not found, enabling demo mode")
-          setIsDemo(true)
-          setActivities(demoActivities)
-        } else {
-          throw error
-        }
-      } else {
-        setActivities(data || [])
+        console.log("Error loading activities, using demo mode:", error)
+        setIsDemo(true)
+        setActivities(demoActivities)
+        return
       }
+
+      setActivities(data || [])
     } catch (error) {
-      console.error("Error loading activities:", error)
+      console.log("Error loading activities:", error)
       setIsDemo(true)
       setActivities(demoActivities)
-    } finally {
-      setLoading(false)
     }
   }
 
   const loadCurrentAndNextActivity = async () => {
-    if (!currentTimetable || isDemo) return
+    if (!user?.id || isDemo) return
 
     try {
-      const { data: currentData, error: currentError } = await supabase.rpc("get_current_activity", {
-        user_uuid: user.id,
-      })
+      const [currentResult, nextResult] = await Promise.all([
+        supabase.rpc("get_current_activity", { user_uuid: user.id }),
+        supabase.rpc("get_next_activity", { user_uuid: user.id }),
+      ])
 
-      if (currentError && currentError.code !== "42883") {
-        throw currentError
+      if (currentResult.error) {
+        console.log("Error getting current activity:", currentResult.error)
+      } else if (currentResult.data && currentResult.data.length > 0) {
+        setCurrentActivity(currentResult.data[0])
       }
 
-      setCurrentActivity(currentData?.[0] || null)
-
-      const { data: nextData, error: nextError } = await supabase.rpc("get_next_activity", { user_uuid: user.id })
-
-      if (nextError && nextError.code !== "42883") {
-        throw nextError
+      if (nextResult.error) {
+        console.log("Error getting next activity:", nextResult.error)
+      } else if (nextResult.data && nextResult.data.length > 0) {
+        setNextActivity(nextResult.data[0])
       }
-
-      setNextActivity(nextData?.[0] || null)
     } catch (error) {
-      console.error("Error loading current/next activity:", error)
+      console.log("Error loading current/next activities:", error)
     }
   }
 
@@ -339,17 +392,13 @@ export function TimetableClient({ user, initialTimetables = [] }: TimetableClien
         }
       }
 
-      if (selectedCategory && activity.category !== selectedCategory) {
-        return false
-      }
-
       if (activeFilter !== "all" && activity.category !== activeFilter) {
         return false
       }
 
       return true
     })
-  }, [activities, selectedDay, searchQuery, selectedCategory, activeFilter])
+  }, [activities, selectedDay, searchQuery, activeFilter])
 
   const categories = useMemo(() => {
     const cats = activities

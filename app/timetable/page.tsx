@@ -222,6 +222,26 @@ export default async function TimetablePage({ searchParams }: { searchParams: { 
         </div>
       )}
 
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <a
+              href="/dashboard"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Dashboard
+            </a>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Time Table</h1>
+              <p className="text-sm text-gray-600">Manage your daily schedule and activities</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Main Content */}
       <main className="px-4 sm:px-6 lg:px-8 py-8">
         <TimetableClient

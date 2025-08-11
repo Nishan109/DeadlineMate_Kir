@@ -126,6 +126,7 @@ export function AddActivityDialog({ isOpen, onClose, timetableId, onActivityAdde
           category: formData.category.trim() || null,
           color: formData.color,
           location: formData.location.trim() || null,
+          is_recurring: schedules.some((schedule) => schedule.is_recurring),
         })
         .select()
         .single()
@@ -140,8 +141,6 @@ export function AddActivityDialog({ isOpen, onClose, timetableId, onActivityAdde
         day_of_week: schedule.day_of_week,
         start_time: schedule.start_time,
         end_time: schedule.end_time,
-        is_recurring: schedule.is_recurring,
-        recurrence_pattern: "weekly",
         is_active: true,
       }))
 
