@@ -54,7 +54,7 @@ const colorOptions = [
   { value: "blue", label: "Blue", class: "bg-blue-100 border-blue-300" },
   { value: "green", label: "Green", class: "bg-green-100 border-green-300" },
   { value: "pink", label: "Pink", class: "bg-pink-100 border-pink-300" },
-  { value: "purple", label: "Purple", class: "bg-purple-100 border-purple-300" },
+  { value: "purple", label: 'Purple", class = "bg-purple-100 border-purple-300' },
   { value: "orange", label: "Orange", class: "bg-orange-100 border-orange-300" },
 ]
 
@@ -180,47 +180,53 @@ export default function EditNoteDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Note</DialogTitle>
-          <DialogDescription>Make changes to your note.</DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Edit Note</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base">Make changes to your note.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-sm sm:text-base">
+              Title
+            </Label>
             <Input
               id="title"
               placeholder="Enter note title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content" className="text-sm sm:text-base">
+              Content
+            </Label>
             <Textarea
               id="content"
               placeholder="Write your note content here..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={4}
+              rows={3}
+              className="text-sm sm:text-base min-h-[80px] sm:min-h-[100px]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
+            <Label className="text-sm sm:text-base">Tags</Label>
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
               {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1 text-xs">
                   {tag}
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
                     className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-2 h-2 sm:w-3 sm:h-3" />
                   </button>
                 </Badge>
               ))}
@@ -231,27 +237,33 @@ export default function EditNoteDialog({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1"
+                className="flex-1 text-sm sm:text-base h-8 sm:h-9"
               />
-              <Button type="button" onClick={handleAddTag} variant="outline" size="sm">
-                <Plus className="w-4 h-4" />
+              <Button
+                type="button"
+                onClick={handleAddTag}
+                variant="outline"
+                size="sm"
+                className="h-8 sm:h-9 px-2 sm:px-3 bg-transparent"
+              >
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label>Color</Label>
+              <Label className="text-sm sm:text-base">Color</Label>
               <Select value={color} onValueChange={setColor}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-sm sm:text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {colorOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded border ${option.class}`} />
-                        {option.label}
+                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded border ${option.class}`} />
+                        <span className="text-sm">{option.label}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -260,16 +272,16 @@ export default function EditNoteDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Link to Deadline</Label>
+              <Label className="text-sm sm:text-base">Link to Deadline</Label>
               <Select value={deadlineId} onValueChange={setDeadlineId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-sm sm:text-base">
                   <SelectValue placeholder="Select deadline..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No deadline</SelectItem>
                   {deadlines.map((deadline) => (
                     <SelectItem key={deadline.id} value={deadline.id}>
-                      {deadline.title}
+                      <span className="text-sm">{deadline.title}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -279,14 +291,25 @@ export default function EditNoteDialog({
 
           <div className="flex items-center space-x-2">
             <Switch id="pinned" checked={isPinned} onCheckedChange={setIsPinned} />
-            <Label htmlFor="pinned">Pin this note</Label>
+            <Label htmlFor="pinned" className="text-sm sm:text-base">
+              Pin this note
+            </Label>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="w-full sm:w-auto text-sm sm:text-base bg-transparent"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!title.trim() || isLoading} className="bg-emerald-500 hover:bg-emerald-600">
+            <Button
+              type="submit"
+              disabled={!title.trim() || isLoading}
+              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base"
+            >
               {isLoading ? (
                 <>
                   <LoadingSpinner size="sm" className="mr-2" />
