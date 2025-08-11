@@ -3,23 +3,10 @@
 import { useState, useEffect, useMemo } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { User } from "@supabase/auth-helpers-nextjs"
-import {
-  Calendar,
-  Clock,
-  Plus,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Target,
-  Settings,
-  StickyNote,
-  CheckCircle,
-  MapPin,
-} from "lucide-react"
+import { Calendar, Plus, Search, ChevronLeft, ChevronRight, Settings, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { LoadingButton } from "@/components/loading-button"
 import { AddActivityDialog } from "@/components/timetable/add-activity-dialog"
 import { EditActivityDialog } from "@/components/timetable/edit-activity-dialog"
 import { CurrentActivityCard } from "@/components/timetable/current-activity-card"
@@ -88,7 +75,6 @@ interface NextActivity extends CurrentActivity {
 
 interface TimetableClientProps {
   user: User
-  profile: Profile | null
   initialTimetables: Timetable[]
 }
 
@@ -121,7 +107,7 @@ const FILTER_TABS = [
   { label: "Personal", value: "personal" },
 ]
 
-export function TimetableClient({ user, profile, initialTimetables }: TimetableClientProps) {
+export function TimetableClient({ user, initialTimetables = [] }: TimetableClientProps) {
   const [timetables, setTimetables] = useState<Timetable[]>(initialTimetables)
   const [activities, setActivities] = useState<Activity[]>([])
   const [currentActivity, setCurrentActivity] = useState<CurrentActivity | null>(null)
@@ -137,7 +123,17 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
 
   const supabase = createClientComponentClient()
 
-  const currentTimetable = timetables.find((t) => t.is_active) || timetables[0]
+  // Create default timetable when none exists
+  const currentTimetable = timetables.find((t) => t.is_active) ||
+    timetables[0] || {
+      id: "default-timetable",
+      user_id: user.id,
+      name: "My Timetable",
+      description: "Default timetable",
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
 
   const demoActivities: Activity[] = [
     {
@@ -147,8 +143,7 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
       description: "Daily exercise routine",
       category: "Health",
       location: "Home Gym",
-      color: "#10B981",
-      is_recurring: true,
+      color: "green",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       schedules: [
@@ -158,8 +153,12 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
           day_of_week: 1,
           start_time: "07:00",
           end_time: "08:00",
+          is_recurring: true,
+          recurrence_pattern: "weekly",
+          specific_dates: null,
           is_active: true,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ],
     },
@@ -170,8 +169,7 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
       description: "Weekly team sync",
       category: "Work",
       location: "Conference Room A",
-      color: "#3B82F6",
-      is_recurring: true,
+      color: "blue",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       schedules: [
@@ -181,23 +179,77 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
           day_of_week: 1,
           start_time: "10:00",
           end_time: "11:00",
+          is_recurring: true,
+          recurrence_pattern: "weekly",
+          specific_dates: null,
           is_active: true,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ],
     },
   ]
 
+  // Initialize timetables with proper error handling
   useEffect(() => {
-    if (currentTimetable) {
-      loadActivities()
-      loadCurrentAndNextActivity()
-    } else {
-      setIsDemo(true)
-      setActivities(demoActivities)
-      setLoading(false)
+    const initializeTimetables = async () => {
+      if (initialTimetables.length === 0) {
+        try {
+          const { data, error } = await supabase
+            .from("timetables")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+
+          if (error) {
+            console.log("Database not available, using demo mode")
+            setIsDemo(true)
+            setActivities(demoActivities)
+            setLoading(false)
+            return
+          }
+
+          if (data && data.length > 0) {
+            setTimetables(data)
+          } else {
+            const { data: newTimetable, error: createError } = await supabase
+              .from("timetables")
+              .insert({
+                user_id: user.id,
+                name: "My Timetable",
+                description: "Default timetable",
+                is_active: true,
+              })
+              .select()
+              .single()
+
+            if (createError) {
+              console.log("Cannot create timetable, using demo mode")
+              setIsDemo(true)
+              setActivities(demoActivities)
+              setLoading(false)
+              return
+            }
+
+            setTimetables([newTimetable])
+          }
+        } catch (error) {
+          console.log("Database error, using demo mode:", error)
+          setIsDemo(true)
+          setActivities(demoActivities)
+          setLoading(false)
+          return
+        }
+      }
+
+      if (currentTimetable && !isDemo) {
+        loadActivities()
+        loadCurrentAndNextActivity()
+      }
     }
-  }, [currentTimetable])
+
+    initializeTimetables()
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -307,9 +359,6 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
     return cats as string[]
   }, [activities])
 
-  const displayName = profile?.full_name || user.email?.split("@")[0] || "User"
-  const avatarFallback = profile?.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "U"
-
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(":")
     const hour = Number.parseInt(hours)
@@ -321,71 +370,6 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
   const getColorClass = (color: string) => {
     return COLOR_OPTIONS.find((c) => c.value === color)?.class || "bg-gray-100 text-gray-800 border-gray-200"
   }
-
-  const SidebarContent = () => (
-    <>
-      <div className="p-4 sm:p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <Target className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
-          </div>
-          <span className="text-lg sm:text-xl font-bold text-gray-900">DeadlineMate</span>
-        </div>
-      </div>
-
-      <nav className="flex-1 p-3 sm:p-4">
-        <div className="space-y-1 sm:space-y-2">
-          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/dashboard">
-            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Dashboard</span>
-          </LoadingButton>
-          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/calendar">
-            <Clock className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Calendar View</span>
-          </LoadingButton>
-          <LoadingButton variant="ghost" className="w-full justify-start bg-emerald-50 text-emerald-700 h-10 sm:h-auto">
-            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Time Table</span>
-          </LoadingButton>
-          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/analytics">
-            <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Analytics</span>
-          </LoadingButton>
-          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/notes">
-            <StickyNote className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Notes</span>
-          </LoadingButton>
-          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/profile">
-            <Settings className="w-4 h-4 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-base">Profile Settings</span>
-          </LoadingButton>
-        </div>
-      </nav>
-
-      <div className="p-3 sm:p-4 border-t border-gray-200">
-        <div className="text-xs sm:text-sm text-gray-600 mb-2">Quick Stats</div>
-        <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Total Activities</span>
-            <span className="font-medium">{activities.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Today's Activities</span>
-            <span className="font-medium">
-              {
-                activities.filter((a) => a.schedules.some((s) => s.day_of_week === new Date().getDay() && s.is_active))
-                  .length
-              }
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Categories</span>
-            <span className="font-medium">{categories.length}</span>
-          </div>
-        </div>
-      </div>
-    </>
-  )
 
   if (loading) {
     return (
@@ -557,7 +541,7 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
                           {DAYS_OF_WEEK.find((d) => d.value === schedule.day_of_week)?.short}
                         </span>
                         <span className="font-medium">
-                          {schedule.start_time} - {schedule.end_time}
+                          {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
                         </span>
                       </div>
                     ))}
@@ -607,3 +591,5 @@ export function TimetableClient({ user, profile, initialTimetables }: TimetableC
     </div>
   )
 }
+
+export default TimetableClient
