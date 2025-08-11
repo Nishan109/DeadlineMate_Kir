@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -97,9 +97,8 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
   })
   const [schedules, setSchedules] = useState<Schedule[]>([])
 
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
-  // Initialize form data when activity changes
   useEffect(() => {
     if (activity) {
       setFormData({
@@ -128,7 +127,6 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
 
     setLoading(true)
     try {
-      // Update the activity
       const { error: activityError } = await supabase
         .from("activities")
         .update({
@@ -143,11 +141,9 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
 
       if (activityError) throw activityError
 
-      // Handle schedule updates
       const existingScheduleIds = activity.schedules.map((s) => s.id)
       const currentScheduleIds = schedules.filter((s) => s.id).map((s) => s.id)
 
-      // Delete removed schedules
       const schedulesToDelete = existingScheduleIds.filter((id) => !currentScheduleIds.includes(id))
       if (schedulesToDelete.length > 0) {
         const { error: deleteError } = await supabase.from("activity_schedules").delete().in("id", schedulesToDelete)
@@ -155,10 +151,8 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
         if (deleteError) throw deleteError
       }
 
-      // Update existing schedules and insert new ones
       for (const schedule of schedules) {
         if (schedule.id) {
-          // Update existing schedule
           const { error: updateError } = await supabase
             .from("activity_schedules")
             .update({
@@ -173,7 +167,6 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
 
           if (updateError) throw updateError
         } else {
-          // Insert new schedule
           const { error: insertError } = await supabase.from("activity_schedules").insert({
             activity_id: activity.id,
             day_of_week: schedule.day_of_week,
@@ -240,69 +233,81 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Activity</DialogTitle>
-          <DialogDescription>Update your activity details and schedule.</DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Edit Activity</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base">
+            Update your activity details and schedule.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <Label htmlFor="title">Activity Title *</Label>
+              <Label htmlFor="title" className="text-sm sm:text-base">
+                Activity Title *
+              </Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Math Class, Gym Workout, Team Meeting"
                 required
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-sm sm:text-base">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the activity"
                 rows={3}
+                className="text-sm sm:text-base"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-sm sm:text-base">
+                  Category
+                </Label>
                 <Input
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="e.g., Work, Study, Exercise"
+                  className="text-sm sm:text-base"
                 />
               </div>
 
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location" className="text-sm sm:text-base">
+                  Location
+                </Label>
                 <Input
                   id="location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Room 101, Gym, Online"
+                  className="text-sm sm:text-base"
                 />
               </div>
             </div>
 
-            {/* Color Selection */}
             <div>
-              <Label>Color Theme</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <Label className="text-sm sm:text-base">Color Theme</Label>
+              <div className="flex flex-wrap gap-1 sm:gap-2 mt-2">
                 {COLOR_OPTIONS.map((color) => (
                   <button
                     key={color.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, color: color.value })}
-                    className={`px-3 py-1 rounded-full text-sm border-2 transition-all ${
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm border-2 transition-all ${
                       formData.color === color.value
                         ? `${color.class} border-current`
                         : `${color.class} border-transparent opacity-60 hover:opacity-100`
@@ -315,41 +320,46 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
             </div>
           </div>
 
-          {/* Schedule Configuration */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Schedule</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addSchedule}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Label className="text-sm sm:text-base font-medium">Schedule</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addSchedule}
+                className="text-xs sm:text-sm bg-transparent"
+              >
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Add Time Slot
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {schedules.map((schedule, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-4">
+                <div key={index} className="p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Time Slot {index + 1}</h4>
+                    <h4 className="font-medium text-sm sm:text-base">Time Slot {index + 1}</h4>
                     {schedules.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeSchedule(index)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div>
-                      <Label>Day of Week</Label>
+                      <Label className="text-sm">Day of Week</Label>
                       <select
                         value={schedule.day_of_week}
                         onChange={(e) => updateSchedule(index, "day_of_week", Number.parseInt(e.target.value))}
-                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full mt-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       >
                         {DAYS_OF_WEEK.map((day) => (
                           <option key={day.value} value={day.value}>
@@ -360,32 +370,34 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
                     </div>
 
                     <div>
-                      <Label>Start Time</Label>
+                      <Label className="text-sm">Start Time</Label>
                       <Input
                         type="time"
                         value={schedule.start_time}
                         onChange={(e) => updateSchedule(index, "start_time", e.target.value)}
+                        className="text-sm"
                       />
                     </div>
 
                     <div>
-                      <Label>End Time</Label>
+                      <Label className="text-sm">End Time</Label>
                       <Input
                         type="time"
                         value={schedule.end_time}
                         onChange={(e) => updateSchedule(index, "end_time", e.target.value)}
+                        className="text-sm"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`recurring-${index}`}
                         checked={schedule.is_recurring}
                         onCheckedChange={(checked) => updateSchedule(index, "is_recurring", checked)}
                       />
-                      <Label htmlFor={`recurring-${index}`} className="text-sm">
+                      <Label htmlFor={`recurring-${index}`} className="text-xs sm:text-sm">
                         Repeat weekly
                       </Label>
                     </div>
@@ -396,7 +408,7 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
                         checked={schedule.is_active}
                         onCheckedChange={(checked) => updateSchedule(index, "is_active", checked)}
                       />
-                      <Label htmlFor={`active-${index}`} className="text-sm">
+                      <Label htmlFor={`active-${index}`} className="text-xs sm:text-sm">
                         Active
                       </Label>
                     </div>
@@ -406,13 +418,13 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
             </div>
           </div>
 
-          <DialogFooter className="flex justify-between">
+          <DialogFooter className="flex flex-col sm:flex-row justify-between gap-2">
             <Button
               type="button"
               variant="destructive"
               onClick={handleDelete}
               disabled={loading || deleteLoading}
-              className="mr-auto"
+              className="w-full sm:w-auto text-sm order-2 sm:order-1"
             >
               {deleteLoading ? (
                 <>
@@ -421,17 +433,27 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
                 </>
               ) : (
                 <>
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Delete Activity
                 </>
               )}
             </Button>
 
-            <div className="flex space-x-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={loading || deleteLoading}>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 order-1 sm:order-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading || deleteLoading}
+                className="w-full sm:w-auto text-sm bg-transparent"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || deleteLoading || !formData.title.trim()}>
+              <Button
+                type="submit"
+                disabled={loading || deleteLoading || !formData.title.trim()}
+                className="w-full sm:w-auto text-sm"
+              >
                 {loading ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" />
@@ -439,7 +461,7 @@ export function EditActivityDialog({ isOpen, onClose, activity, onActivityUpdate
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Save Changes
                   </>
                 )}
