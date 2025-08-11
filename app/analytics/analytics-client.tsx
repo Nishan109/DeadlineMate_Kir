@@ -26,11 +26,10 @@ import {
   Info,
   Menu,
   ArrowLeft,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
-  PieChart,
+  LucidePieChart,
   Activity,
+  StickyNote,
 } from "lucide-react"
 import { signOut } from "../auth/actions"
 import {
@@ -376,9 +375,17 @@ export default function AnalyticsClient({ user, initialDeadlines, isDemoMode = f
             <Clock className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Calendar View</span>
           </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/timetable">
+            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Time Table</span>
+          </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start bg-emerald-50 text-emerald-700 h-10 sm:h-auto">
             <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Analytics</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/notes">
+            <StickyNote className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Notes</span>
           </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/profile">
             <Settings className="w-4 h-4 mr-2 sm:mr-3" />
@@ -527,9 +534,9 @@ export default function AnalyticsClient({ user, initialDeadlines, isDemoMode = f
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-0">
                 <CardTitle className="text-xs sm:text-sm font-medium">Weekly Trend</CardTitle>
                 {analytics.weeklyTrend >= 0 ? (
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+                  <LucidePieChart className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                  <LucidePieChart className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
                 )}
               </CardHeader>
               <CardContent className="p-0 pt-1 sm:pt-2">
@@ -546,9 +553,12 @@ export default function AnalyticsClient({ user, initialDeadlines, isDemoMode = f
             </Card>
 
             <Card className="p-3 sm:p-4">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-0">
-                <CardTitle className="text-xs sm:text-sm font-medium">Avg. Completion</CardTitle>
-                <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              <CardHeader className="p-3 sm:p-6">
+                <CardTitle className="flex items-center text-sm sm:text-base">
+                  <LucidePieChart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  Avg. Completion
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Average completion time in days</CardDescription>
               </CardHeader>
               <CardContent className="p-0 pt-1 sm:pt-2">
                 <div className="text-lg sm:text-2xl font-bold text-purple-600">{analytics.avgCompletionTime}</div>
@@ -563,51 +573,34 @@ export default function AnalyticsClient({ user, initialDeadlines, isDemoMode = f
             <Card>
               <CardHeader className="p-3 sm:p-6">
                 <CardTitle className="flex items-center text-sm sm:text-base">
-                  <PieChart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <LucidePieChart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Status Distribution
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm">Current status of all deadlines</CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-6 pt-0">
                 {statusData.length > 0 ? (
-                  <>
-                    <ChartContainer
-                      config={{
-                        completed: { label: "Completed", color: COLORS.completed },
-                        pending: { label: "Pending", color: COLORS.pending },
-                        in_progress: { label: "In Progress", color: COLORS.in_progress },
-                        overdue: { label: "Overdue", color: COLORS.overdue },
-                      }}
-                      className="h-[200px] sm:h-[300px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPieChart>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <RechartsPieChart data={statusData} cx="50%" cy="50%" outerRadius="80%">
-                            {statusData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </RechartsPieChart>
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                    <div className="grid grid-cols-2 gap-1 sm:gap-2 mt-3 sm:mt-4">
-                      {statusData.map((item) => (
-                        <div key={item.name} className="flex items-center space-x-1 sm:space-x-2">
-                          <div
-                            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
-                            style={{ backgroundColor: item.color }}
-                          ></div>
-                          <span className="text-xs sm:text-sm">
-                            {item.name}: {item.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                  <ChartContainer
+                    config={{
+                      completed: { label: "Completed", color: COLORS.completed },
+                      pending: { label: "Pending", color: COLORS.pending },
+                      in_progress: { label: "In Progress", color: COLORS.in_progress },
+                      overdue: { label: "Overdue", color: COLORS.overdue },
+                    }}
+                    className="h-[200px] sm:h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        {statusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    <PieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <LucidePieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p>No data available</p>
                   </div>
                 )}
@@ -731,7 +724,7 @@ export default function AnalyticsClient({ user, initialDeadlines, isDemoMode = f
               <Card>
                 <CardHeader className="p-3 sm:p-6">
                   <CardTitle className="flex items-center text-sm sm:text-base">
-                    <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    <LucidePieChart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Priority Distribution
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">Breakdown by priority levels</CardDescription>

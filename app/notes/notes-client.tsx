@@ -38,7 +38,6 @@ import {
 } from "lucide-react"
 import { signOut } from "../auth/actions"
 import { format } from "date-fns"
-import { LoadingButton } from "@/components/loading-button"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import Link from "next/link"
@@ -47,6 +46,7 @@ import AddNoteDialog from "@/components/notes/add-note-dialog"
 import EditNoteDialog from "@/components/notes/edit-note-dialog"
 import DeleteNoteDialog from "@/components/notes/delete-note-dialog"
 import ViewNoteDialog from "@/components/notes/view-note-dialog"
+import { LoadingButton } from "@/components/loading-button"
 
 interface Note {
   id: string
@@ -112,6 +112,7 @@ const mockNotes: Note[] = [
     tags: ["meeting", "ideas", "team"],
     color: "green",
     is_pinned: false,
+    deadline_id: "3",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -396,6 +397,14 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
           <LoadingButton
             variant="ghost"
             className="w-full justify-start h-9 sm:h-10 lg:h-auto text-sm sm:text-base"
+            href="/timetable"
+          >
+            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
+            <span>Time Table</span>
+          </LoadingButton>
+          <LoadingButton
+            variant="ghost"
+            className="w-full justify-start h-9 sm:h-10 lg:h-auto text-sm sm:text-base"
             href="/analytics"
           >
             <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
@@ -566,10 +575,9 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
               <span>Add New Note</span>
             </Button>
           </div>
-
           {/* Filter Tabs */}
           <Tabs value={activeFilter} onValueChange={setActiveFilter} className="mb-3 sm:mb-4 lg:mb-6">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-auto h-auto p-1">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 lg:w-auto h-auto p-1">
               <TabsTrigger value="all" className="text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3">
                 All ({stats.total})
               </TabsTrigger>
@@ -584,7 +592,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
               </TabsTrigger>
             </TabsList>
           </Tabs>
-
           {/* Search Bar */}
           <div className="relative mb-4 sm:mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
@@ -595,7 +602,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
               className="pl-8 sm:pl-10 max-w-full sm:max-w-md text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
-
           {/* Notes Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             {filteredNotes.length === 0 ? (
@@ -688,7 +694,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
                       <p className="text-xs sm:text-sm text-gray-700 mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-3">
                         {note.content}
                       </p>
-
                       {/* Tags */}
                       {note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2 sm:mb-3">
@@ -705,7 +710,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
                           )}
                         </div>
                       )}
-
                       {/* Linked Deadline */}
                       {linkedDeadline && (
                         <div className="flex items-center text-xs text-blue-600 mb-2 sm:mb-3">
@@ -713,12 +717,10 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
                           <span className="truncate text-xs">{linkedDeadline.title}</span>
                         </div>
                       )}
-
                       {/* Timestamp */}
                       <p className="text-xs text-gray-500">
                         Updated {format(new Date(note.updated_at), "MMM dd, yyyy")}
                       </p>
-
                       {/* Click hint */}
                       <div className="mt-1 sm:mt-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
                         Click to view full content
@@ -731,7 +733,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
           </div>
         </main>
       </div>
-
       {/* Dialogs */}
       <AddNoteDialog
         isOpen={isAddDialogOpen}
@@ -742,7 +743,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
         userId={currentProfile.id}
         isDemoMode={isDemoMode}
       />
-
       <EditNoteDialog
         isOpen={isEditDialogOpen}
         onClose={() => {
@@ -755,7 +755,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
         deadlines={deadlines}
         isDemoMode={isDemoMode}
       />
-
       <DeleteNoteDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => {
@@ -767,7 +766,6 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
         note={selectedNote}
         isDemoMode={isDemoMode}
       />
-
       <ViewNoteDialog
         isOpen={isViewDialogOpen}
         onClose={() => {

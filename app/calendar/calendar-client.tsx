@@ -26,6 +26,7 @@ import {
   Info,
   Menu,
   ArrowLeft,
+  StickyNote,
 } from "lucide-react"
 import { signOut } from "../auth/actions"
 import {
@@ -344,9 +345,17 @@ export default function CalendarClient({ user, initialDeadlines, isDemoMode = fa
             <Clock className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Calendar View</span>
           </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/timetable">
+            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Time Table</span>
+          </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/analytics">
             <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Analytics</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/notes">
+            <StickyNote className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Notes</span>
           </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/profile">
             <Settings className="w-4 h-4 mr-2 sm:mr-3" />

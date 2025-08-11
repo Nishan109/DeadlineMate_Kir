@@ -378,6 +378,10 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
             <Clock className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Calendar View</span>
           </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/timetable">
+            <Calendar className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Time Table</span>
+          </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/analytics">
             <CheckCircle className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Analytics</span>
