@@ -38,26 +38,31 @@ export default async function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 gap-3 sm:gap-0">
+            <div className="flex items-center justify-between sm:justify-start">
+              <Link
+                href="/dashboard"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">Back to Dashboard</span>
+                <span className="xs:hidden">Back</span>
               </Link>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">Profile Settings</span>
+              {/* Mobile menu button space if needed */}
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Profile Settings</span>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
         <ProfileManagement user={user} isDemoMode={isDemoMode} />
       </main>
     </div>

@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -47,7 +46,7 @@ interface UserProfile {
 
 interface ProfileManagementProps {
   user: any
-  profile: UserProfile | null
+  profile?: UserProfile | null
   isDemoMode?: boolean
 }
 
@@ -267,22 +266,22 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
   const avatarFallback = profileData.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="max-w-5xl mx-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-        <div className="relative">
-          <Avatar className="w-16 h-16 sm:w-20 sm:h-20">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 p-4 sm:p-6 bg-white rounded-lg border border-gray-200">
+        <div className="relative flex-shrink-0">
+          <Avatar className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24">
             <AvatarImage
-              src={profileData.avatar_url || "/placeholder.svg?height=80&width=80"}
+              src={profileData.avatar_url || "/placeholder.svg?height=96&width=96"}
               alt={`${displayName}'s avatar`}
             />
-            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xl sm:text-2xl">
+            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg sm:text-xl lg:text-2xl">
               {avatarFallback}
             </AvatarFallback>
           </Avatar>
           <label
             htmlFor="avatar-upload"
-            className="absolute -bottom-1 -right-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full p-1.5 cursor-pointer transition-colors"
+            className="absolute -bottom-1 -right-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full p-1.5 sm:p-2 cursor-pointer transition-colors shadow-lg"
           >
             <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
             <input
@@ -295,10 +294,10 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
             />
           </label>
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{displayName}</h1>
-          <p className="text-sm sm:text-base text-gray-600 truncate">{user?.email}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 truncate">{user?.email}</p>
+          <p className="text-xs sm:text-sm text-gray-500">
             Member since {new Date(profile?.created_at || user?.created_at).toLocaleDateString()}
           </p>
         </div>
@@ -306,13 +305,17 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
 
       {/* Status Messages */}
       {message && (
-        <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+        <Alert
+          className={`${message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"} mx-1 sm:mx-0`}
+        >
           {message.type === "success" ? (
             <CheckCircle className="h-4 w-4 text-green-600" />
           ) : (
             <AlertTriangle className="h-4 w-4 text-red-600" />
           )}
-          <AlertDescription className={message.type === "success" ? "text-green-800" : "text-red-800"}>
+          <AlertDescription
+            className={`${message.type === "success" ? "text-green-800" : "text-red-800"} text-sm sm:text-base`}
+          >
             {message.text}
           </AlertDescription>
         </Alert>
@@ -320,9 +323,9 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
 
       {/* Demo Mode Alert */}
       {isDemoMode && (
-        <Alert className="border-blue-200 bg-blue-50">
+        <Alert className="border-blue-200 bg-blue-50 mx-1 sm:mx-0">
           <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+          <AlertDescription className="text-blue-800 text-sm sm:text-base">
             <strong>Demo Mode:</strong> You're viewing sample data. Changes won't be permanently saved.
           </AlertDescription>
         </Alert>
@@ -330,22 +333,28 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="profile" className="text-sm sm:text-base">
-            Profile
+        <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto p-1">
+          <TabsTrigger value="profile" className="text-xs sm:text-sm lg:text-base py-2 sm:py-3">
+            <User className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Profile</span>
+            <span className="xs:hidden">Info</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="text-sm sm:text-base">
-            Security
+          <TabsTrigger value="security" className="text-xs sm:text-sm lg:text-base py-2 sm:py-3">
+            <Shield className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Security</span>
+            <span className="xs:hidden">Sec</span>
           </TabsTrigger>
-          <TabsTrigger value="privacy" className="text-sm sm:text-base">
-            Data & Privacy
+          <TabsTrigger value="privacy" className="text-xs sm:text-sm lg:text-base py-2 sm:py-3">
+            <Download className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Data & Privacy</span>
+            <span className="sm:hidden">Data</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <User className="w-5 h-5" />
                 Personal Information
@@ -354,10 +363,10 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                 Update your personal details and profile information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm sm:text-base">
+                  <Label htmlFor="full_name" className="text-sm sm:text-base font-medium">
                     Full Name
                   </Label>
                   <Input
@@ -365,11 +374,11 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                     placeholder="Enter your full name"
                     value={profileData.full_name}
                     onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                    className="text-sm sm:text-base h-9 sm:h-10"
+                    className="text-sm sm:text-base h-10 sm:h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm sm:text-base">
+                  <Label htmlFor="phone" className="text-sm sm:text-base font-medium">
                     Phone Number
                   </Label>
                   <Input
@@ -377,12 +386,12 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                     placeholder="Enter your phone number"
                     value={profileData.phone}
                     onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    className="text-sm sm:text-base h-9 sm:h-10"
+                    className="text-sm sm:text-base h-10 sm:h-11"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm sm:text-base">
+                <Label htmlFor="location" className="text-sm sm:text-base font-medium">
                   Location
                 </Label>
                 <Input
@@ -390,11 +399,11 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                   placeholder="Enter your location"
                   value={profileData.location}
                   onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                  className="text-sm sm:text-base h-9 sm:h-10"
+                  className="text-sm sm:text-base h-10 sm:h-11"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bio" className="text-sm sm:text-base">
+                <Label htmlFor="bio" className="text-sm sm:text-base font-medium">
                   Bio
                 </Label>
                 <Textarea
@@ -402,35 +411,37 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                   placeholder="Tell us about yourself"
                   value={profileData.bio}
                   onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                  rows={3}
-                  className="text-sm sm:text-base min-h-[80px] sm:min-h-[100px]"
+                  rows={4}
+                  className="text-sm sm:text-base min-h-[100px] sm:min-h-[120px] resize-none"
                 />
               </div>
-              <Button
-                onClick={handleProfileSave}
-                disabled={isSaving}
-                className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base"
-              >
-                {isSaving ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleProfileSave}
+                  disabled={isSaving}
+                  className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base h-10 sm:h-11 px-6 sm:px-8"
+                >
+                  {isSaving ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent value="security" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Key className="w-5 h-5" />
                 Change Password
@@ -439,9 +450,9 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                 Update your password to keep your account secure.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="current_password" className="text-sm sm:text-base">
+                <Label htmlFor="current_password" className="text-sm sm:text-base font-medium">
                   Current Password
                 </Label>
                 <div className="relative">
@@ -451,22 +462,22 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                     placeholder="Enter current password"
                     value={securityData.currentPassword}
                     onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
-                    className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                    className="text-sm sm:text-base h-10 sm:h-11 pr-12"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-9 sm:h-10 px-3"
+                    className="absolute right-0 top-0 h-10 sm:h-11 px-3"
                     onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                   >
                     {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="new_password" className="text-sm sm:text-base">
+                  <Label htmlFor="new_password" className="text-sm sm:text-base font-medium">
                     New Password
                   </Label>
                   <div className="relative">
@@ -476,13 +487,13 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                       placeholder="Enter new password"
                       value={securityData.newPassword}
                       onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
-                      className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                      className="text-sm sm:text-base h-10 sm:h-11 pr-12"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-9 sm:h-10 px-3"
+                      className="absolute right-0 top-0 h-10 sm:h-11 px-3"
                       onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
                     >
                       {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -490,7 +501,7 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm_password" className="text-sm sm:text-base">
+                  <Label htmlFor="confirm_password" className="text-sm sm:text-base font-medium">
                     Confirm New Password
                   </Label>
                   <div className="relative">
@@ -500,13 +511,13 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                       placeholder="Confirm new password"
                       value={securityData.confirmPassword}
                       onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
-                      className="text-sm sm:text-base h-9 sm:h-10 pr-10"
+                      className="text-sm sm:text-base h-10 sm:h-11 pr-12"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-9 sm:h-10 px-3"
+                      className="absolute right-0 top-0 h-10 sm:h-11 px-3"
                       onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
                     >
                       {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -514,33 +525,35 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={handlePasswordChange}
-                disabled={
-                  isSaving ||
-                  !securityData.currentPassword ||
-                  !securityData.newPassword ||
-                  !securityData.confirmPassword
-                }
-                className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base"
-              >
-                {isSaving ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Key className="w-4 h-4 mr-2" />
-                    Update Password
-                  </>
-                )}
-              </Button>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handlePasswordChange}
+                  disabled={
+                    isSaving ||
+                    !securityData.currentPassword ||
+                    !securityData.newPassword ||
+                    !securityData.confirmPassword
+                  }
+                  className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base h-10 sm:h-11 px-6 sm:px-8"
+                >
+                  {isSaving ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Key className="w-4 h-4 mr-2" />
+                      Update Password
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Shield className="w-5 h-5" />
                 Security Settings
@@ -549,15 +562,12 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                 Manage your account security and notification preferences.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Smartphone className="w-4 h-4" />
-                    <span className="font-medium text-sm sm:text-base">Two-Factor Authentication</span>
-                    <Badge variant="outline" className="text-xs">
-                      Recommended
-                    </Badge>
+                    <Smartphone className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm sm:text-base font-medium">Two-Factor Authentication</span>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">Add an extra layer of security to your account</p>
                 </div>
@@ -566,26 +576,26 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
                   onCheckedChange={(checked) => setSecurityData({ ...securityData, twoFactorEnabled: checked })}
                 />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Mail className="w-4 h-4" />
-                    <span className="font-medium text-sm sm:text-base">Email Notifications</span>
+                    <Mail className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm sm:text-base font-medium">Email Notifications</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">Receive security alerts via email</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Receive email notifications for important updates</p>
                 </div>
                 <Switch
                   checked={securityData.emailNotifications}
                   onCheckedChange={(checked) => setSecurityData({ ...securityData, emailNotifications: checked })}
                 />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Phone className="w-4 h-4" />
-                    <span className="font-medium text-sm sm:text-base">SMS Notifications</span>
+                    <Phone className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm sm:text-base font-medium">SMS Notifications</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">Receive security alerts via SMS</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Receive SMS notifications for critical alerts</p>
                 </div>
                 <Switch
                   checked={securityData.smsNotifications}
@@ -597,9 +607,9 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
         </TabsContent>
 
         {/* Data & Privacy Tab */}
-        <TabsContent value="privacy" className="space-y-6">
+        <TabsContent value="privacy" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Download className="w-5 h-5" />
                 Data Export
@@ -609,57 +619,62 @@ export function ProfileManagement({ user, profile, isDemoMode = false }: Profile
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                onClick={exportData}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full sm:w-auto text-sm sm:text-base bg-transparent"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export My Data
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex-1">
+                  <p className="text-sm sm:text-base text-gray-600 mb-4">
+                    Export includes your profile information, deadlines, notes, and account settings. The data will be
+                    provided in JSON format.
+                  </p>
+                </div>
+                <Button
+                  onClick={exportData}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11 px-6 sm:px-8 bg-transparent"
+                >
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Data
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="border-red-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600 text-lg sm:text-xl">
+            <CardHeader className="pb-4 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-red-600">
                 <Trash2 className="w-5 h-5" />
                 Danger Zone
               </CardTitle>
               <CardDescription className="text-sm sm:text-base">Irreversible and destructive actions.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert className="border-red-200 bg-red-50">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800 text-sm sm:text-base">
-                  <strong>Warning:</strong> Deleting your account will permanently remove all your data including
-                  deadlines, notes, and profile information. This action cannot be undone.
-                </AlertDescription>
-              </Alert>
-              <Button
-                variant="destructive"
-                disabled={isDemoMode}
-                className="w-full sm:w-auto text-sm sm:text-base"
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-                    setMessage({ type: "error", text: "Account deletion is not available in demo mode." })
-                    setTimeout(() => setMessage(null), 3000)
-                  }
-                }}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Account
-              </Button>
+            <CardContent>
+              <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex-1">
+                    <h4 className="text-sm sm:text-base font-medium text-red-800 mb-1">Delete Account</h4>
+                    <p className="text-xs sm:text-sm text-red-600">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    disabled={isDemoMode}
+                    className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11 px-6 sm:px-8"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

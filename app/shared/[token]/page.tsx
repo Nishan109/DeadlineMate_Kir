@@ -4,16 +4,13 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import {
   Calendar,
   Clock,
   ExternalLink,
   Share2,
   AlertCircle,
-  CheckCircle2,
   Timer,
-  User,
   ArrowRight,
   Target,
   Database,
@@ -121,21 +118,22 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
           {/* Header */}
           <header className="bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-4xl mx-auto px-4 py-6">
-              <div className="flex items-center justify-between">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-white" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-semibold text-gray-900">DeadlineMate</h1>
-                    <p className="text-sm text-gray-600">Shared Deadline (Demo)</p>
+                    <h1 className="text-lg sm:text-xl font-semibold text-gray-900">DeadlineMate</h1>
+                    <p className="text-xs sm:text-sm text-gray-600">Shared Deadline (Demo)</p>
                   </div>
                 </div>
                 <Link href="/">
-                  <Button variant="outline" size="sm" className="bg-transparent">
-                    Try DeadlineMate
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
+                    <span className="hidden sm:inline">Try DeadlineMate</span>
+                    <span className="sm:hidden">Try App</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                   </Button>
                 </Link>
               </div>
@@ -143,19 +141,25 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
           </header>
 
           {/* Demo Content */}
-          <main className="max-w-4xl mx-auto px-4 py-8">
-            <div className="grid gap-6 lg:grid-cols-3">
+          <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
               {/* Demo Deadline Card */}
               <div className="lg:col-span-2">
                 <Card className="shadow-lg border-0 bg-white">
-                  <CardHeader className="pb-4">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-2xl font-bold text-gray-900 mb-2">Sample Project Deadline</CardTitle>
-                        <div className="flex items-center space-x-3 mb-4 flex-wrap">
-                          <Badge className="bg-red-100 text-red-800 border-red-200 border">high priority</Badge>
-                          <Badge className="bg-blue-100 text-blue-800 border-blue-200 border">in progress</Badge>
-                          <Badge variant="outline" className="bg-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-2 break-words">
+                          Sample Project Deadline
+                        </CardTitle>
+                        <div className="flex items-center gap-2 sm:gap-3 mb-4 flex-wrap">
+                          <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs sm:text-sm">
+                            high priority
+                          </Badge>
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-200 border text-xs sm:text-sm">
+                            in progress
+                          </Badge>
+                          <Badge variant="outline" className="bg-gray-50 text-xs sm:text-sm">
                             Development
                           </Badge>
                         </div>
@@ -163,23 +167,23 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                     </div>
 
                     {/* Due Date Section */}
-                    <div className="bg-gray-50 rounded-lg p-4 border">
-                      <div className="flex items-center justify-between">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                         <div className="flex items-center space-x-3">
-                          <Calendar className="w-5 h-5 text-gray-600" />
+                          <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 text-sm sm:text-base">
                               {format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "EEEE, MMMM do, yyyy")}
                             </p>
-                            <p className="text-sm text-gray-600 flex items-center">
-                              <Clock className="w-4 h-4 mr-1" />
+                            <p className="text-xs sm:text-sm text-gray-600 flex items-center">
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               5:00 PM
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left sm:text-right">
                           <div className="flex items-center text-blue-600">
-                            <Timer className="w-5 h-5 mr-2" />
+                            <Timer className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                             <div className="text-right">
                               <p className="font-medium">7 days left</p>
                             </div>
@@ -189,11 +193,11 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-6">
+                  <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
                     {/* Description */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                      <p className="text-gray-700 leading-relaxed">
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Description</h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words">
                         This is a sample deadline created for demonstration purposes. It shows how shared deadlines work
                         in DeadlineMate, including all the features like priority levels, status tracking, and project
                         links.
@@ -202,15 +206,15 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
 
                     {/* Project Link */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Project Resources</h3>
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Project Resources</h3>
                       <a
                         href="https://github.com/example/project"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm sm:text-base break-all"
                       >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View Project
+                        <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <span className="truncate">View Project</span>
                       </a>
                     </div>
                   </CardContent>
@@ -218,12 +222,12 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Demo Notice */}
                 <Card className="bg-yellow-50 border-yellow-200">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                     <CardTitle className="text-lg flex items-center text-yellow-900">
-                      <Settings className="w-5 h-5 mr-2" />
+                      <Settings className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       Demo Mode
                     </CardTitle>
                   </CardHeader>
@@ -241,63 +245,48 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
 
                 {/* Share Info */}
                 <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                     <CardTitle className="text-lg flex items-center text-blue-900">
-                      <Share2 className="w-5 h-5 mr-2" />
+                      <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       Share Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">Shared:</span>
-                      <span className="text-blue-900 font-medium">{format(new Date(), "MMM d, yyyy")}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-blue-700 font-medium text-sm sm:text-base">Shared:</span>
+                      <span className="text-blue-900 text-sm sm:text-base">Demo</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">Views:</span>
-                      <span className="text-blue-900 font-medium">Demo</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-blue-700 font-medium text-sm sm:text-base">Views:</span>
+                      <span className="text-blue-900 text-sm sm:text-base">Demo</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">Expires:</span>
-                      <span className="text-blue-900 font-medium">Never</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-blue-700 font-medium text-sm sm:text-base">Expires:</span>
+                      <span className="text-blue-900 text-sm sm:text-base">Never</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Call to Action */}
                 <Card className="bg-emerald-50 border-emerald-200">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                     <CardTitle className="text-lg text-emerald-900">Try DeadlineMate</CardTitle>
-                    <CardDescription className="text-emerald-700">
+                    <CardDescription className="text-emerald-700 text-sm sm:text-base">
                       Organize your deadlines and collaborate with your team
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2 text-sm text-emerald-800">
-                      <div className="flex items-center">
-                        <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                        Smart deadline tracking
-                      </div>
-                      <div className="flex items-center">
-                        <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                        Team collaboration
-                      </div>
-                      <div className="flex items-center">
-                        <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                        Real-time notifications
-                      </div>
-                    </div>
-                    <Separator className="bg-emerald-200" />
-                    <div className="space-y-2">
+                  <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
+                    <div className="space-y-2 sm:space-y-3">
                       <Link href="/" className="block">
-                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
+                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-sm sm:text-base h-9 sm:h-10">
                           Get Started Free
-                          <ArrowRight className="w-4 h-4 ml-2" />
+                          <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
                         </Button>
                       </Link>
                       <Link href="/auth" className="block">
                         <Button
                           variant="outline"
-                          className="w-full bg-transparent border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                          className="w-full bg-transparent border-emerald-300 text-emerald-700 hover:bg-emerald-100 text-sm sm:text-base h-9 sm:h-10"
                         >
                           Sign In
                         </Button>
@@ -311,8 +300,8 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
 
           {/* Footer */}
           <footer className="bg-white border-t border-gray-200 mt-12">
-            <div className="max-w-4xl mx-auto px-4 py-6">
-              <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 text-xs sm:text-sm text-gray-600">
                 <p>© 2024 DeadlineMate. All rights reserved.</p>
                 <div className="flex items-center space-x-4">
                   <Link href="/" className="hover:text-gray-900">
@@ -619,21 +608,22 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">DeadlineMate</h1>
-                  <p className="text-sm text-gray-600">Shared Deadline</p>
+                  <h1 className="text-lg sm:text-xl font-semibold text-gray-900">DeadlineMate</h1>
+                  <p className="text-xs sm:text-sm text-gray-600">Shared Deadline</p>
                 </div>
               </div>
               <Link href="/">
-                <Button variant="outline" size="sm" className="bg-transparent">
-                  Try DeadlineMate
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Try DeadlineMate</span>
+                  <span className="sm:hidden">Try App</span>
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                 </Button>
               </Link>
             </div>
@@ -641,24 +631,28 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
             {/* Main Deadline Card */}
             <div className="lg:col-span-2">
               <Card className="shadow-lg border-0 bg-white">
-                <CardHeader className="pb-4">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl font-bold text-gray-900 mb-2">{deadline.title}</CardTitle>
-                      <div className="flex items-center space-x-3 mb-4 flex-wrap">
-                        <Badge className={`${getPriorityColor(deadline.priority)} border`}>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-2 break-words">
+                        {deadline.title}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 sm:gap-3 mb-4 flex-wrap">
+                        <Badge className={`${getPriorityColor(deadline.priority)} border text-xs sm:text-sm`}>
                           {deadline.priority} priority
                         </Badge>
-                        <Badge className={`${getStatusColor(isOverdue ? "overdue" : deadline.status)} border`}>
+                        <Badge
+                          className={`${getStatusColor(isOverdue ? "overdue" : deadline.status)} border text-xs sm:text-sm`}
+                        >
                           {isOverdue ? "overdue" : deadline.status.replace("_", " ")}
                         </Badge>
                         {deadline.category && (
-                          <Badge variant="outline" className="bg-gray-50">
+                          <Badge variant="outline" className="bg-gray-50 text-xs sm:text-sm">
                             {deadline.category}
                           </Badge>
                         )}
@@ -667,71 +661,55 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                   </div>
 
                   {/* Due Date Section */}
-                  <div className="bg-gray-50 rounded-lg p-4 border">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                       <div className="flex items-center space-x-3">
-                        <Calendar className="w-5 h-5 text-gray-600" />
+                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                         <div>
-                          <p className="font-medium text-gray-900">{format(dueDate, "EEEE, MMMM do, yyyy")}</p>
-                          <p className="text-sm text-gray-600 flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">
+                            {format(dueDate, "EEEE, MMMM do, yyyy")}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600 flex items-center">
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             {format(dueDate, "h:mm a")}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        {isOverdue ? (
-                          <div className="flex items-center text-red-600">
-                            <AlertCircle className="w-5 h-5 mr-2" />
-                            <span className="font-medium">Overdue</span>
+                      <div className="text-left sm:text-right">
+                        <div className="flex items-center text-blue-600">
+                          <Timer className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                          <div className="text-right">
+                            <p className="font-medium">
+                              {daysUntilDue > 0 ? `${daysUntilDue} days left` : "Due today"}
+                            </p>
                           </div>
-                        ) : deadline.status === "completed" ? (
-                          <div className="flex items-center text-green-600">
-                            <CheckCircle2 className="w-5 h-5 mr-2" />
-                            <span className="font-medium">Completed</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-blue-600">
-                            <Timer className="w-5 h-5 mr-2" />
-                            <div className="text-right">
-                              <p className="font-medium">
-                                {daysUntilDue === 0
-                                  ? "Due today"
-                                  : daysUntilDue === 1
-                                    ? "Due tomorrow"
-                                    : daysUntilDue > 0
-                                      ? `${daysUntilDue} days left`
-                                      : "Past due"}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-6">
                   {/* Description */}
-                  {deadline.description && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{deadline.description}</p>
-                    </div>
-                  )}
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Description</h3>
+                    <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words">
+                      {deadline.description || "No description available."}
+                    </p>
+                  </div>
 
                   {/* Project Link */}
                   {deadline.project_link && (
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Project Resources</h3>
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Project Resources</h3>
                       <a
                         href={deadline.project_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm sm:text-base break-all"
                       >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View Project
+                        <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <span className="truncate">View Project</span>
                       </a>
                     </div>
                   )}
@@ -740,89 +718,29 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Share Info */}
               <Card className="bg-blue-50 border-blue-200">
-                <CardHeader className="pb-3">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
                   <CardTitle className="text-lg flex items-center text-blue-900">
-                    <Share2 className="w-5 h-5 mr-2" />
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Share Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">Shared:</span>
-                    <span className="text-blue-900 font-medium">
-                      {format(new Date(sharedDeadline.created_at), "MMM d, yyyy")}
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 font-medium text-sm sm:text-base">Shared By:</span>
+                    <span className="text-blue-900 text-sm sm:text-base">{sharedDeadline.created_by}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 font-medium text-sm sm:text-base">Views:</span>
+                    <span className="text-blue-900 text-sm sm:text-base">{sharedDeadline.view_count || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 font-medium text-sm sm:text-base">Expires:</span>
+                    <span className="text-blue-900 text-sm sm:text-base">
+                      {sharedDeadline.expires_at ? format(new Date(sharedDeadline.expires_at), "PPP") : "Never"}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">Views:</span>
-                    <span className="text-blue-900 font-medium">{sharedDeadline.view_count || 0}</span>
-                  </div>
-                  {sharedDeadline.expires_at && (
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">Expires:</span>
-                      <span className="text-blue-900 font-medium">
-                        {format(new Date(sharedDeadline.expires_at), "MMM d, yyyy")}
-                      </span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Call to Action */}
-              <Card className="bg-emerald-50 border-emerald-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-emerald-900">Try DeadlineMate</CardTitle>
-                  <CardDescription className="text-emerald-700">
-                    Organize your deadlines and collaborate with your team
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2 text-sm text-emerald-800">
-                    <div className="flex items-center">
-                      <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                      Smart deadline tracking
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                      Team collaboration
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />
-                      Real-time notifications
-                    </div>
-                  </div>
-                  <Separator className="bg-emerald-200" />
-                  <div className="space-y-2">
-                    <Link href="/" className="block">
-                      <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                        Get Started Free
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
-                    <Link href="/auth" className="block">
-                      <Button
-                        variant="outline"
-                        className="w-full bg-transparent border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-                      >
-                        Sign In
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Security Notice */}
-              <Card className="bg-gray-50 border-gray-200">
-                <CardContent className="pt-4">
-                  <div className="flex items-start space-x-2">
-                    <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <div className="text-xs text-gray-600">
-                      <p className="font-medium mb-1">Shared securely</p>
-                      <p>This deadline was shared by a DeadlineMate user. Only people with this link can view it.</p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -832,8 +750,8 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
 
         {/* Footer */}
         <footer className="bg-white border-t border-gray-200 mt-12">
-          <div className="max-w-4xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 text-xs sm:text-sm text-gray-600">
               <p>© 2024 DeadlineMate. All rights reserved.</p>
               <div className="flex items-center space-x-4">
                 <Link href="/" className="hover:text-gray-900">
@@ -849,35 +767,24 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       </div>
     )
   } catch (error) {
-    console.error("💥 Unexpected error in SharedDeadlinePage:", error)
+    console.error("Error fetching shared deadline:", error)
 
-    // Show a helpful error page for unexpected errors
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-red-600" />
             </div>
-            <CardTitle className="text-red-900">Something went wrong</CardTitle>
+            <CardTitle className="text-red-900">Error Loading Deadline</CardTitle>
             <CardDescription className="text-red-700">
-              An unexpected error occurred while loading this shared deadline.
+              An error occurred while loading the shared deadline.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h4 className="font-medium text-red-900 mb-2">Error Details:</h4>
-              <div className="text-sm text-red-800 space-y-1">
-                <p>
-                  <strong>Token:</strong> {params.token}
-                </p>
-                <p>
-                  <strong>Error:</strong> {error instanceof Error ? error.message : "Unknown error"}
-                </p>
-                <p>
-                  <strong>Time:</strong> {new Date().toLocaleString()}
-                </p>
-              </div>
+              <p className="text-sm text-red-800">{error.message}</p>
             </div>
             <div className="flex space-x-2">
               <Link href="/" className="flex-1">
