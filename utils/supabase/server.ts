@@ -47,7 +47,71 @@ export async function createClient() {
     console.log("📍 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + "...")
     console.log("🔑 Anon Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-    const cookieStore = await cookies()
+    let cookieStore
+    try {
+      cookieStore = await cookies()
+    } catch (cookieError) {
+      console.warn("⚠️ Failed to access cookies, this might be a client-side call:", cookieError)
+      // Return a mock client when cookies are not available
+      return {
+        auth: {
+          getUser: () =>
+            Promise.resolve({ data: { user: null }, error: { message: "Server context required for authentication" } }),
+          signInWithPassword: () =>
+            Promise.resolve({ data: { user: null }, error: { message: "Server context required for authentication" } }),
+          signUp: () =>
+            Promise.resolve({ data: { user: null }, error: { message: "Server context required for authentication" } }),
+          signOut: () => Promise.resolve({ error: null }),
+        },
+        from: (table: string) => ({
+          select: (columns?: string) => ({
+            eq: (column: string, value: any) => ({
+              order: (column: string, options?: any) =>
+                Promise.resolve({
+                  data: [],
+                  error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+                }),
+              single: () =>
+                Promise.resolve({
+                  data: null,
+                  error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+                }),
+              limit: (count: number) =>
+                Promise.resolve({
+                  data: [],
+                  error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+                }),
+            }),
+            single: () =>
+              Promise.resolve({
+                data: null,
+                error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+              }),
+            limit: (count: number) =>
+              Promise.resolve({
+                data: [],
+                error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+              }),
+          }),
+          insert: (values: any) => ({
+            select: (columns?: string) => ({
+              single: () =>
+                Promise.resolve({
+                  data: null,
+                  error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+                }),
+            }),
+          }),
+          update: (values: any) => ({
+            eq: (column: string, value: any) =>
+              Promise.resolve({
+                data: null,
+                error: { message: "Server context required", code: "SERVER_CONTEXT_ERROR" },
+              }),
+          }),
+        }),
+      } as any
+    }
 
     const client = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

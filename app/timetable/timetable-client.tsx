@@ -131,7 +131,7 @@ export function TimetableClient({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isDemo, setIsDemo] = useState(isDemoMode)
+  const [isDemo, setIsDemo] = useState(isDemoMode || !user?.id)
 
   const supabase = createClient()
 
@@ -210,119 +210,117 @@ export function TimetableClient({
 
   useEffect(() => {
     const initializeTimetables = async () => {
+      console.log("[v0] Initializing timetables with user:", user?.id, "demo mode:", isDemo)
+
+      if (user?.id && initialTimetables.length > 0) {
+        console.log("[v0] Using initial timetables data:", initialTimetables.length)
+        setTimetables(initialTimetables)
+        setIsDemo(false)
+
+        if (initialActivities.length > 0) {
+          console.log("[v0] Using initial activities data:", initialActivities.length)
+          setActivities(initialActivities)
+        } else {
+          await loadActivitiesFromDatabase()
+        }
+
+        setLoading(false)
+        return
+      }
+
       if (!user?.id) {
-        console.log("No authenticated user, using demo mode")
+        console.log("[v0] No authenticated user, using demo mode")
         setIsDemo(true)
         setActivities(demoActivities)
         setLoading(false)
         return
       }
 
-      if (initialTimetables.length === 0) {
-        try {
-          const {
-            data: { user: currentUser },
-            error: authError,
-          } = await supabase.auth.getUser()
+      try {
+        console.log("[v0] Loading timetables from database for user:", user.id)
 
-          if (authError || !currentUser) {
-            console.log("Authentication failed, using demo mode")
-            setIsDemo(true)
-            setActivities(demoActivities)
-            setLoading(false)
-            return
-          }
+        const { data, error } = await supabase
+          .from("timetables")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-          const { data, error } = await supabase
-            .from("timetables")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .order("created_at", { ascending: false })
-
-          if (error) {
-            console.log("Database not available, using demo mode:", error)
-            setIsDemo(true)
-            setActivities(demoActivities)
-            setLoading(false)
-            return
-          }
-
-          if (data && data.length > 0) {
-            setTimetables(data)
-          } else {
-            try {
-              const { data: newTimetable, error: createError } = await supabase
-                .from("timetables")
-                .insert({
-                  user_id: currentUser.id,
-                  name: "My Timetable",
-                  description: "Default timetable",
-                  is_active: true,
-                })
-                .select()
-                .single()
-
-              if (createError) {
-                console.log("Cannot create timetable (RLS policy), using demo mode:", createError)
-                setIsDemo(true)
-                setActivities(demoActivities)
-                setLoading(false)
-                return
-              }
-
-              setTimetables([newTimetable])
-            } catch (createError) {
-              console.log("RLS policy violation, using demo mode:", createError)
-              setIsDemo(true)
-              setActivities(demoActivities)
-              setLoading(false)
-              return
-            }
-          }
-        } catch (error) {
-          console.log("Database error, using demo mode:", error)
+        if (error) {
+          console.log("[v0] Database not available, using demo mode:", error)
           setIsDemo(true)
           setActivities(demoActivities)
           setLoading(false)
           return
         }
-      }
 
-      if (currentTimetable && !isDemo) {
-        loadActivities()
-        loadCurrentAndNextActivity()
+        if (data && data.length > 0) {
+          console.log("[v0] Loaded timetables from database:", data.length)
+          setTimetables(data)
+          setIsDemo(false)
+          await loadActivitiesFromDatabase()
+        } else {
+          try {
+            const { data: newTimetable, error: createError } = await supabase
+              .from("timetables")
+              .insert({
+                user_id: user.id,
+                name: "My Timetable",
+                description: "Default timetable",
+                is_active: true,
+              })
+              .select()
+              .single()
+
+            if (createError) {
+              console.log("[v0] Cannot create timetable (RLS policy), using demo mode:", createError)
+              setIsDemo(true)
+              setActivities(demoActivities)
+            } else {
+              console.log("[v0] Created new timetable:", newTimetable)
+              setTimetables([newTimetable])
+              setIsDemo(false)
+            }
+          } catch (createError) {
+            console.log("[v0] RLS policy violation, using demo mode:", createError)
+            setIsDemo(true)
+            setActivities(demoActivities)
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Database error, using demo mode:", error)
+        setIsDemo(true)
+        setActivities(demoActivities)
       }
 
       setLoading(false)
     }
 
     initializeTimetables()
-  }, [])
+  }, [user, initialTimetables, initialActivities])
+
+  useEffect(() => {
+    if (activities.length > 0) {
+      console.log("[v0] Calculating current and next activities from", activities.length, "activities")
+      loadCurrentAndNextActivity()
+    }
+  }, [activities])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (currentTimetable && !isDemo) {
+      if (activities.length > 0) {
+        console.log("[v0] Updating current and next activities (1-minute interval)")
         loadCurrentAndNextActivity()
       }
     }, 60000)
 
     return () => clearInterval(interval)
-  }, [currentTimetable, isDemo])
+  }, [activities])
 
-  const loadActivities = async () => {
-    if (!currentTimetable?.id || isDemo) return
+  const loadActivitiesFromDatabase = async () => {
+    if (!currentTimetable?.id || isDemo || !user?.id) return
 
     try {
-      const {
-        data: { user: currentUser },
-        error: authError,
-      } = await supabase.auth.getUser()
-
-      if (authError || !currentUser) {
-        setIsDemo(true)
-        setActivities(demoActivities)
-        return
-      }
+      console.log("[v0] Loading activities from database for timetable:", currentTimetable.id)
 
       const { data, error } = await supabase
         .from("activities")
@@ -334,43 +332,132 @@ export function TimetableClient({
         .order("created_at", { ascending: false })
 
       if (error) {
-        console.log("Error loading activities, using demo mode:", error)
-        setIsDemo(true)
-        setActivities(demoActivities)
+        console.log("[v0] Error loading activities from database:", error)
         return
       }
 
+      console.log("[v0] Loaded activities from database:", data?.length || 0)
       setActivities(data || [])
     } catch (error) {
-      console.log("Error loading activities:", error)
-      setIsDemo(true)
-      setActivities(demoActivities)
+      console.log("[v0] Error loading activities:", error)
     }
   }
 
-  const loadCurrentAndNextActivity = async () => {
-    if (!user?.id || isDemo) return
-
-    try {
-      const [currentResult, nextResult] = await Promise.all([
-        supabase.rpc("get_current_activity", { user_uuid: user.id }),
-        supabase.rpc("get_next_activity", { user_uuid: user.id }),
-      ])
-
-      if (currentResult.error) {
-        console.log("Error getting current activity:", currentResult.error)
-      } else if (currentResult.data && currentResult.data.length > 0) {
-        setCurrentActivity(currentResult.data[0])
-      }
-
-      if (nextResult.error) {
-        console.log("Error getting next activity:", nextResult.error)
-      } else if (nextResult.data && nextResult.data.length > 0) {
-        setNextActivity(nextResult.data[0])
-      }
-    } catch (error) {
-      console.log("Error loading current/next activities:", error)
+  const loadActivities = async () => {
+    if (isDemo) {
+      setActivities(demoActivities)
+      return
     }
+    await loadActivitiesFromDatabase()
+  }
+
+  const loadCurrentAndNextActivity = () => {
+    console.log("[v0] Calculating current and next activities from", activities.length, "activities")
+
+    const now = new Date()
+    const currentTime = now.getHours() * 60 + now.getMinutes() // minutes since midnight
+    const currentDayOfWeek = now.getDay()
+
+    const todaySchedules = activities
+      .flatMap((activity) =>
+        activity.schedules
+          .filter((schedule) => schedule.day_of_week === currentDayOfWeek && schedule.is_active)
+          .map((schedule) => ({
+            ...schedule,
+            activity,
+            startMinutes:
+              Number.parseInt(schedule.start_time.split(":")[0]) * 60 +
+              Number.parseInt(schedule.start_time.split(":")[1]),
+            endMinutes:
+              Number.parseInt(schedule.end_time.split(":")[0]) * 60 + Number.parseInt(schedule.end_time.split(":")[1]),
+          })),
+      )
+      .sort((a, b) => a.startMinutes - b.startMinutes)
+
+    const current = todaySchedules.find(
+      (schedule) => currentTime >= schedule.startMinutes && currentTime < schedule.endMinutes,
+    )
+
+    if (current) {
+      console.log("[v0] Found current activity:", current.activity.title)
+      setCurrentActivity({
+        activity_id: current.activity.id,
+        title: current.activity.title,
+        description: current.activity.description,
+        category: current.activity.category,
+        color: current.activity.color,
+        location: current.activity.location,
+        start_time: current.start_time,
+        end_time: current.end_time,
+        day_of_week: current.day_of_week,
+      })
+    } else {
+      console.log("[v0] No current activity found")
+      setCurrentActivity(null)
+    }
+
+    let nextActivityFound = null
+
+    const upcomingToday = todaySchedules.filter((schedule) => schedule.startMinutes > currentTime)
+    if (upcomingToday.length > 0) {
+      const next = upcomingToday[0]
+      console.log("[v0] Found next activity today:", next.activity.title)
+      nextActivityFound = {
+        activity_id: next.activity.id,
+        title: next.activity.title,
+        description: next.activity.description,
+        category: next.activity.category,
+        color: next.activity.color,
+        location: next.activity.location,
+        start_time: next.start_time,
+        end_time: next.end_time,
+        day_of_week: next.day_of_week,
+        days_until: 0,
+      }
+    } else {
+      for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
+        const checkDay = (currentDayOfWeek + daysAhead) % 7
+        const daySchedules = activities
+          .flatMap((activity) =>
+            activity.schedules
+              .filter((schedule) => schedule.day_of_week === checkDay && schedule.is_active)
+              .map((schedule) => ({
+                ...schedule,
+                activity,
+                startMinutes:
+                  Number.parseInt(schedule.start_time.split(":")[0]) * 60 +
+                  Number.parseInt(schedule.start_time.split(":")[1]),
+              })),
+          )
+          .sort((a, b) => a.startMinutes - b.startMinutes)
+
+        if (daySchedules.length > 0) {
+          const next = daySchedules[0]
+          console.log("[v0] Found next activity in", daysAhead, "days:", next.activity.title)
+          nextActivityFound = {
+            activity_id: next.activity.id,
+            title: next.activity.title,
+            description: next.activity.description,
+            category: next.activity.category,
+            color: next.activity.color,
+            location: next.activity.location,
+            start_time: next.start_time,
+            end_time: next.end_time,
+            day_of_week: next.day_of_week,
+            days_until: daysAhead,
+          }
+          break
+        }
+      }
+    }
+
+    if (nextActivityFound) {
+      console.log("[v0] Setting next activity:", nextActivityFound.title)
+    } else {
+      console.log("[v0] No next activity found")
+    }
+
+    setNextActivity(nextActivityFound)
   }
 
   const filteredActivities = useMemo(() => {

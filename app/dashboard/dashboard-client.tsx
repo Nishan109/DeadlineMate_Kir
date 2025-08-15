@@ -35,6 +35,7 @@ import {
   ExternalLink,
   Share2,
   StickyNote,
+  LinkIcon,
 } from "lucide-react"
 import { signOut } from "../auth/actions"
 import AddDeadlineDialog from "./add-deadline-dialog"
@@ -389,6 +390,10 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/notes">
             <StickyNote className="w-4 h-4 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Notes</span>
+          </LoadingButton>
+          <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/quick-links">
+            <LinkIcon className="w-4 h-4 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Quick Links</span>
           </LoadingButton>
           <LoadingButton variant="ghost" className="w-full justify-start h-10 sm:h-auto" href="/profile">
             <Settings className="w-4 h-4 mr-2 sm:mr-3" />

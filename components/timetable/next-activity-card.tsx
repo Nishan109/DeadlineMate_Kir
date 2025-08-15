@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Tag, Calendar, ArrowRight } from "lucide-react"
@@ -26,6 +27,54 @@ interface NextActivityCardProps {
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 export function NextActivityCard({ activity, formatTime, getColorClass }: NextActivityCardProps) {
+  const [timeUntil, setTimeUntil] = useState<string>("")
+
+  useEffect(() => {
+    if (!activity) return
+
+    const updateTimeUntil = () => {
+      const now = new Date()
+      const [startHours, startMinutes] = activity.start_time.split(":").map(Number)
+
+      const startTime = new Date()
+      startTime.setHours(startHours, startMinutes, 0, 0)
+
+      // If it's for a future day, add the days
+      if (activity.days_until > 0) {
+        startTime.setDate(startTime.getDate() + activity.days_until)
+      }
+
+      // If the time has passed today, it's for tomorrow
+      if (activity.days_until === 0 && startTime.getTime() <= now.getTime()) {
+        startTime.setDate(startTime.getDate() + 1)
+      }
+
+      const diff = startTime.getTime() - now.getTime()
+
+      if (diff <= 0) {
+        setTimeUntil("Starting now")
+        return
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+      if (days > 0) {
+        setTimeUntil(`in ${days}d ${hours}h`)
+      } else if (hours > 0) {
+        setTimeUntil(`in ${hours}h ${minutes}m`)
+      } else {
+        setTimeUntil(`in ${minutes}m`)
+      }
+    }
+
+    updateTimeUntil()
+    const interval = setInterval(updateTimeUntil, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [activity])
+
   if (!activity) {
     return (
       <Card>
@@ -93,7 +142,7 @@ export function NextActivityCard({ activity, formatTime, getColorClass }: NextAc
           <div className="mt-4 p-3 bg-blue-100 rounded-lg">
             <p className="text-sm text-blue-800 font-medium">{getTimeUntilText(activity.days_until)}</p>
             <p className="text-xs text-blue-600">
-              {DAYS_OF_WEEK[activity.day_of_week]} at {formatTime(activity.start_time)}
+              {DAYS_OF_WEEK[activity.day_of_week]} at {formatTime(activity.start_time)} ({timeUntil})
             </p>
           </div>
         </div>

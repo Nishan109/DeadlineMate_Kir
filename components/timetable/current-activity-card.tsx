@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Tag, Calendar } from "lucide-react"
@@ -23,6 +24,40 @@ interface CurrentActivityCardProps {
 }
 
 export function CurrentActivityCard({ activity, formatTime, getColorClass }: CurrentActivityCardProps) {
+  const [timeRemaining, setTimeRemaining] = useState<string>("")
+
+  useEffect(() => {
+    if (!activity) return
+
+    const updateTimeRemaining = () => {
+      const now = new Date()
+      const [endHours, endMinutes] = activity.end_time.split(":").map(Number)
+      const endTime = new Date()
+      endTime.setHours(endHours, endMinutes, 0, 0)
+
+      const diff = endTime.getTime() - now.getTime()
+
+      if (diff <= 0) {
+        setTimeRemaining("Activity ended")
+        return
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+      if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m remaining`)
+      } else {
+        setTimeRemaining(`${minutes}m remaining`)
+      }
+    }
+
+    updateTimeRemaining()
+    const interval = setInterval(updateTimeRemaining, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [activity])
+
   if (!activity) {
     return (
       <Card>
@@ -79,7 +114,7 @@ export function CurrentActivityCard({ activity, formatTime, getColorClass }: Cur
 
           <div className="mt-4 p-3 bg-emerald-100 rounded-lg">
             <p className="text-sm text-emerald-800 font-medium">In Progress</p>
-            <p className="text-xs text-emerald-600">This activity is currently active</p>
+            <p className="text-xs text-emerald-600">{timeRemaining}</p>
           </div>
         </div>
       </CardContent>
