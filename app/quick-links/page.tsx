@@ -1,47 +1,68 @@
 import { createClient } from "@/utils/supabase/server"
-import { redirect } from "next/navigation"
 import { QuickLinksClient } from "./quick-links-client"
 
 export default async function QuickLinksPage() {
-  let supabase
   try {
-    supabase = createClient()
+    const supabase = await createClient()
 
-    // Check if supabase client is properly initialized
     if (!supabase || !supabase.auth) {
       console.log("Supabase client not properly initialized, using demo mode")
       return <QuickLinksClient user={null} profile={null} initialQuickLinks={[]} />
     }
-  } catch (error) {
-    console.error("Failed to create Supabase client:", error)
-    return <QuickLinksClient user={null} profile={null} initialQuickLinks={[]} />
-  }
 
-  try {
+    // Try to get the authenticated user
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
 
-    if (userError || !user) {
-      redirect("/auth")
+    if (userError) {
+      console.log("Authentication error:", userError.message)
+      // Don't redirect, just use demo mode
+      return <QuickLinksClient user={null} profile={null} initialQuickLinks={[]} />
     }
 
-    // Get user profile
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+    if (!user) {
+      console.log("No authenticated user, using demo mode")
+      return <QuickLinksClient user={null} profile={null} initialQuickLinks={[]} />
+    }
 
-    // Get user's quick links
+    // User is authenticated, try to get their data
+    let profile = null
     let initialQuickLinks = []
+
     try {
-      const { data: quickLinks } = await supabase
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single()
+
+      if (profileError && !profileError.message?.includes("Demo mode")) {
+        console.log("Profile fetch error:", profileError.message)
+      } else {
+        profile = profileData
+      }
+
+      // Get user's quick links
+      const { data: quickLinks, error: quickLinksError } = await supabase
         .from("quick_links")
         .select("*")
         .eq("user_id", user.id)
         .order("updated_at", { ascending: false })
 
-      initialQuickLinks = quickLinks || []
+      if (quickLinksError) {
+        console.log("Quick links fetch error:", quickLinksError.message)
+        // If it's a demo mode error, that's expected
+        if (!quickLinksError.message?.includes("Demo mode")) {
+          console.error("Unexpected database error:", quickLinksError)
+        }
+      } else {
+        initialQuickLinks = quickLinks || []
+      }
     } catch (error) {
-      console.log("Quick links table not found, using demo mode")
+      console.log("Error fetching user data:", error)
     }
 
     return <QuickLinksClient user={user} profile={profile} initialQuickLinks={initialQuickLinks} />

@@ -9,12 +9,14 @@ import {
   BarChart3,
   Users,
   Check,
-  Star,
   ArrowRight,
   Mail,
   Twitter,
   Github,
   Linkedin,
+  Award,
+  Code,
+  Cloud,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -327,24 +329,97 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 sm:py-16 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">
-            Trusted by thousands of students and professionals
-          </h3>
-          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 opacity-60 mb-6 sm:mb-8">
-            <div className="text-sm sm:text-base lg:text-lg font-semibold">University of Delhi</div>
-            <div className="text-sm sm:text-base lg:text-lg font-semibold">IIT Bombay</div>
-            <div className="text-sm sm:text-base lg:text-lg font-semibold">Infosys</div>
-            <div className="text-sm sm:text-base lg:text-lg font-semibold">TCS</div>
-            <div className="text-sm sm:text-base lg:text-lg font-semibold">Wipro</div>
+      {/* Founder Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-emerald-50 to-teal-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+              Meet DeadlineMate Founder
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+              Built by a passionate developer with expertise in AI and cloud computing
+            </p>
           </div>
-          <div className="flex justify-center items-center space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400" />
-            ))}
-            <span className="ml-2 text-sm sm:text-base text-gray-600">4.9/5 from 2,000+ users</span>
+
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-0 shadow-2xl overflow-hidden bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-0">
+                <div className="grid lg:grid-cols-2 gap-0">
+                  {/* Image Section */}
+                  <div className="relative h-64 sm:h-80 lg:h-full min-h-[400px]">
+                    <Image
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-08-15%20at%2009.41.54_a1114356.jpg-1SebtMdJvySIjHlM2I4JKRQmYI72J5.jpeg"
+                      alt="Nishan Singh - DeadlineMate Founder"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-black/10"></div>
+                  </div>
+
+                  {/* Content Section */}
+                  <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-center">
+                    <div className="mb-6">
+                      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Nishan Singh</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                          <Award className="w-3 h-3 mr-1" />
+                          Google Gen AI Certified
+                        </Badge>
+                        <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                          <Code className="w-3 h-3 mr-1" />
+                          Computer Science
+                        </Badge>
+                        <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                          <Cloud className="w-3 h-3 mr-1" />
+                          Diamond League
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600 mb-6 leading-relaxed">
+                      Computer Science undergraduate with a strong foundation in cloud computing, AI, and full-stack
+                      development. Completed over{" "}
+                      <span className="font-semibold text-gray-900">300+ hands-on labs</span> and
+                      <span className="font-semibold text-gray-900"> 40+ skill badges</span> on Google Cloud, achieving
+                      Diamond League status.
+                    </p>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-start">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-600">
+                          Skilled in deploying cloud infrastructure and building AI-powered applications
+                        </p>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-600">
+                          Expert with modern tools like ChatGPT, Gemini, Vertex AI Studio, and Supabase
+                        </p>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-600">
+                          Known for building real-world solutions like ChartGPT and DeadlineMate
+                        </p>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-600">
+                          Continuously learning through structured Google Cloud learning paths
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-500 italic">
+                      "Actively seeking opportunities to apply technical skills to solve impactful problems and help
+                      people stay organized and productive."
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -374,19 +449,27 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-6 sm:mb-8">
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Up to 10 active deadlines
+                    Up to 5 active deadlines
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Basic reminders
+                    Smart calendar view
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Mobile app access
+                    Basic notifications
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Email support
+                    Notes & quick links
+                  </li>
+                  <li className="flex items-center text-sm sm:text-base">
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
+                    Smart timetable management
+                  </li>
+                  <li className="flex items-center text-sm sm:text-base">
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
+                    Mobile responsive design
                   </li>
                 </ul>
                 <LoadingButton className="w-full bg-transparent" variant="outline" href="/auth">
@@ -403,7 +486,7 @@ export default function LandingPage() {
               <CardHeader className="text-center pb-6 sm:pb-8">
                 <CardTitle className="text-xl sm:text-2xl">Pro</CardTitle>
                 <div className="mt-4">
-                  <span className="text-3xl sm:text-4xl font-bold">₹199</span>
+                  <span className="text-3xl sm:text-4xl font-bold">₹99</span>
                   <span className="text-gray-600">/month</span>
                 </div>
                 <CardDescription className="mt-2">For power users and teams</CardDescription>
@@ -412,27 +495,27 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-6 sm:mb-8">
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Unlimited deadlines
+                    Unlimited deadlines & projects
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Advanced analytics
+                    Advanced analytics dashboard
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Team collaboration
+                    Smart timetable management
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Priority support
+                    Shared deadlines & collaboration
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Custom integrations
+                    Advanced notes with categories
                   </li>
                   <li className="flex items-center text-sm sm:text-base">
                     <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mr-3 flex-shrink-0" />
-                    Export & backup
+                    Priority support & data export
                   </li>
                 </ul>
                 <LoadingButton className="w-full bg-emerald-500 hover:bg-emerald-600" href="/auth">
