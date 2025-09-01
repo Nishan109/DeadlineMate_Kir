@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { X, Plus } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { RichTextEditor } from "./rich-text-editor" // add rich text editor
 
 interface Note {
   id: string
@@ -54,7 +54,7 @@ const colorOptions = [
   { value: "blue", label: "Blue", class: "bg-blue-100 border-blue-300" },
   { value: "green", label: "Green", class: "bg-green-100 border-green-300" },
   { value: "pink", label: "Pink", class: "bg-pink-100 border-pink-300" },
-  { value: "purple", label: 'Purple", class = "bg-purple-100 border-purple-300' },
+  { value: "purple", label: "Purple", class: "bg-purple-100 border-purple-300" },
   { value: "orange", label: "Orange", class: "bg-orange-100 border-orange-300" },
 ]
 
@@ -75,6 +75,7 @@ export default function EditNoteDialog({
   const [isPinned, setIsPinned] = useState(false)
   const [deadlineId, setDeadlineId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
+  const [editorHtml, setEditorHtml] = useState<string>("") // cache HTML for editor surface
 
   // Populate form when note changes
   useEffect(() => {
@@ -85,6 +86,7 @@ export default function EditNoteDialog({
       setColor(note.color)
       setIsPinned(note.is_pinned)
       setDeadlineId(note.deadline_id || "")
+      setEditorHtml(note.content || "") // seed editor with current content
     }
   }, [note])
 
@@ -114,6 +116,7 @@ export default function EditNoteDialog({
     setColor("yellow")
     setIsPinned(false)
     setDeadlineId("")
+    setEditorHtml("") // reset editor HTML
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,7 +183,7 @@ export default function EditNoteDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[720px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Edit Note</DialogTitle>
           <DialogDescription className="text-sm sm:text-base">Make changes to your note.</DialogDescription>
@@ -205,14 +208,15 @@ export default function EditNoteDialog({
             <Label htmlFor="content" className="text-sm sm:text-base">
               Content
             </Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
+              value={editorHtml}
+              onChange={(html, plain) => {
+                setEditorHtml(html)
+                setContent(plain)
+              }}
               placeholder="Write your note content here..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={3}
-              className="text-sm sm:text-base min-h-[80px] sm:min-h-[100px]"
             />
+            <p className="text-xs text-muted-foreground">Formatting is supported; we’ll save the text content.</p>
           </div>
 
           <div className="space-y-2">
@@ -273,7 +277,7 @@ export default function EditNoteDialog({
 
             <div className="space-y-2">
               <Label className="text-sm sm:text-base">Link to Deadline</Label>
-              <Select value={deadlineId} onValueChange={setDeadlineId}>
+              <Select value={deadlineId || "none"} onValueChange={setDeadlineId}>
                 <SelectTrigger className="h-9 sm:h-10 text-sm sm:text-base">
                   <SelectValue placeholder="Select deadline..." />
                 </SelectTrigger>

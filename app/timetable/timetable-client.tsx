@@ -507,6 +507,71 @@ export function TimetableClient({
     return COLOR_OPTIONS.find((c) => c.value === color)?.class || "bg-gray-100 text-gray-800 border-gray-200"
   }
 
+  const getAccentBorder = (color: string) => {
+    switch (color) {
+      case "red":
+        return "border-l-4 border-red-400"
+      case "orange":
+        return "border-l-4 border-orange-400"
+      case "yellow":
+        return "border-l-4 border-yellow-400"
+      case "green":
+        return "border-l-4 border-green-400"
+      case "blue":
+        return "border-l-4 border-blue-400"
+      case "indigo":
+        return "border-l-4 border-indigo-400"
+      case "purple":
+        return "border-l-4 border-purple-400"
+      case "pink":
+        return "border-l-4 border-pink-400"
+      case "gray":
+        return "border-l-4 border-gray-300"
+      default:
+        return "border-l-4 border-gray-200"
+    }
+  }
+
+  const computedTabs = useMemo(() => {
+    const counts = new Map<string, number>()
+    activities.forEach((a) => {
+      const key = (a.category || "uncategorized").toLowerCase()
+      counts.set(key, (counts.get(key) || 0) + 1)
+    })
+    const tabs: { label: string; value: string; count: number }[] = []
+    const totalForDay = activities.filter((a) =>
+      a.schedules.some((s) => s.day_of_week === selectedDay && s.is_active),
+    ).length
+    tabs.push({ label: "All", value: "all", count: totalForDay })
+    counts.forEach((count, key) => {
+      const label = key === "uncategorized" ? "Uncategorized" : key.charAt(0).toUpperCase() + key.slice(1)
+      tabs.push({
+        label,
+        value: key,
+        count: activities.filter(
+          (a) =>
+            (a.category || "uncategorized").toLowerCase() === key &&
+            a.schedules.some((s) => s.day_of_week === selectedDay && s.is_active),
+        ).length,
+      })
+    })
+    return tabs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activities, selectedDay])
+
+  const handlePrevDay = () => setSelectedDay((d) => (d - 1 + 7) % 7)
+  const handleNextDay = () => setSelectedDay((d) => (d + 1) % 7)
+  const jumpToToday = () => setSelectedDay(new Date().getDay())
+
+  const isToday = (value: number) => value === new Date().getDay()
+  const formatSelectedDayDate = () => {
+    const now = new Date()
+    const diff = (selectedDay + 7 - now.getDay()) % 7
+    const date = new Date(now)
+    date.setDate(now.getDate() + diff)
+    return date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -535,6 +600,7 @@ export function TimetableClient({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full sm:w-64 text-sm"
+                aria-label="Search activities"
               />
             </div>
             <Button
@@ -546,30 +612,47 @@ export function TimetableClient({
             </Button>
           </div>
         </div>
+
+        {/* Compact sticky toolbar for day navigation */}
+        <div className="py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={handlePrevDay} aria-label="Previous day">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-gray-700 font-medium">{formatSelectedDayDate()}</span>
+              <Button variant="outline" size="sm" onClick={handleNextDay} aria-label="Next day">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={jumpToToday} className="ml-1">
+                Today
+              </Button>
+            </div>
+            <div className="hidden sm:flex items-center text-xs text-gray-500">
+              <Calendar className="w-4 h-4 mr-1" />
+              Local time:{" "}
+              {new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 sm:p-6">
+        {/* Make sidebar sticky on large screens for easier scanning */}
+        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 sm:p-6 lg:sticky lg:top-24 self-start">
           {/* Day Navigation */}
           <div className="mb-6">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Navigation</h3>
             <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
               <div className="flex lg:hidden items-center gap-2 mb-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDay((selectedDay - 1 + 7) % 7)}
-                  className="flex-shrink-0"
-                >
+                <Button variant="outline" size="sm" onClick={handlePrevDay} className="flex-shrink-0 bg-transparent">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDay((selectedDay + 1) % 7)}
-                  className="flex-shrink-0"
-                >
+                <Button variant="outline" size="sm" onClick={handleNextDay} className="flex-shrink-0 bg-transparent">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -577,14 +660,21 @@ export function TimetableClient({
                 <button
                   key={day.value}
                   onClick={() => setSelectedDay(day.value)}
-                  className={`flex-shrink-0 lg:flex-shrink px-3 py-2 text-sm rounded-lg transition-colors ${
+                  className={`flex-shrink-0 lg:flex-shrink px-3 py-2 text-sm rounded-lg transition-colors border ${
                     selectedDay === day.value
-                      ? "bg-emerald-100 text-emerald-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-100"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "text-gray-700 hover:bg-gray-50 border-gray-200"
                   }`}
+                  aria-pressed={selectedDay === day.value}
+                  aria-label={`Select ${day.full}`}
                 >
                   <span className="lg:hidden">{day.short}</span>
                   <span className="hidden lg:inline">{day.full}</span>
+                  {isToday(day.value) && (
+                    <span className="ml-2 inline-block rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px]">
+                      Today
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -616,27 +706,52 @@ export function TimetableClient({
 
         {/* Main Content */}
         <div className="flex-1 p-4 sm:p-6">
-          {/* Filter Tabs */}
+          {/* Dynamic category chips with counts and horizontal scroll on mobile */}
           <div className="mb-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-              {FILTER_TABS.map((tab) => (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {computedTabs.map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => setActiveFilter(tab.value)}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
-                    activeFilter === tab.value ? "bg-emerald-100 text-emerald-700" : "text-gray-600 hover:bg-gray-100"
+                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-full border transition-colors whitespace-nowrap ${
+                    activeFilter === tab.value
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                   }`}
+                  aria-pressed={activeFilter === tab.value}
                 >
-                  {tab.label}
+                  {tab.label}{" "}
+                  <span
+                    className={`ml-2 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
+                      activeFilter === tab.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
                 </button>
               ))}
+              {(searchQuery || activeFilter !== "all") && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("")
+                    setActiveFilter("all")
+                  }}
+                  className="ml-1 px-3 py-2 text-xs sm:text-sm rounded-full border bg-white text-gray-700 hover:bg-gray-50"
+                  aria-label="Clear filters"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
 
           {/* Activities Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredActivities.map((activity) => (
-              <Card key={activity.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={activity.id}
+                className={`hover:shadow-md transition-shadow ${getAccentBorder(activity.color)}`}
+              >
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
@@ -654,6 +769,7 @@ export function TimetableClient({
                       size="sm"
                       onClick={() => setEditingActivity(activity)}
                       className="flex-shrink-0 h-8 w-8 p-0"
+                      aria-label={`Edit ${activity.title}`}
                     >
                       <Settings className="w-4 h-4" />
                     </Button>
@@ -693,7 +809,7 @@ export function TimetableClient({
           {filteredActivities.length === 0 && (
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No activities found</h3>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No activities for this day</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
                 {searchQuery ? "Try adjusting your search terms" : "Get started by adding your first activity"}
               </p>
@@ -708,6 +824,15 @@ export function TimetableClient({
           )}
         </div>
       </div>
+
+      {/* Floating action button on mobile for quicker access */}
+      <Button
+        onClick={() => setIsAddDialogOpen(true)}
+        className="fixed bottom-5 right-5 sm:hidden rounded-full h-12 w-12 p-0 shadow-lg bg-emerald-600 hover:bg-emerald-700"
+        aria-label="Add activity"
+      >
+        <Plus className="w-5 h-5" />
+      </Button>
 
       <AddActivityDialog
         isOpen={isAddDialogOpen}

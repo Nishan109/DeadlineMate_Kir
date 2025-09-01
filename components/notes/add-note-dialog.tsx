@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { X, Plus } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { RichTextEditor } from "./rich-text-editor" // add rich text editor
 
 interface Note {
   id: string
@@ -73,8 +73,9 @@ export default function AddNoteDialog({
   const [newTag, setNewTag] = useState("")
   const [color, setColor] = useState("yellow")
   const [isPinned, setIsPinned] = useState(false)
-  const [deadlineId, setDeadlineId] = useState<string>("")
+  const [deadlineId, setDeadlineId] = useState<string>("none")
   const [isLoading, setIsLoading] = useState(false)
+  const [editorHtml, setEditorHtml] = useState<string>("") // keep HTML locally for richer UX
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -101,7 +102,8 @@ export default function AddNoteDialog({
     setNewTag("")
     setColor("yellow")
     setIsPinned(false)
-    setDeadlineId("")
+    setDeadlineId("none")
+    setEditorHtml("") // reset HTML cache
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,7 +143,7 @@ export default function AddNoteDialog({
           tags,
           color,
           is_pinned: isPinned,
-          deadline_id: deadlineId || null,
+          deadline_id: deadlineId === "none" ? null : deadlineId,
         })
         .select()
         .single()
@@ -169,7 +171,7 @@ export default function AddNoteDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500] max-w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[720px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Add New Note</DialogTitle>
           <DialogDescription className="text-sm sm:text-base">
@@ -196,14 +198,16 @@ export default function AddNoteDialog({
             <Label htmlFor="content" className="text-sm sm:text-base">
               Content
             </Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
+              value={editorHtml}
+              onChange={(html, plain) => {
+                setEditorHtml(html)
+                setContent(plain)
+              }}
               placeholder="Write your note content here..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={3}
-              className="text-sm sm:text-base min-h-[80px] sm:min-h-[100px]"
             />
+            {/* Optional hint */}
+            <p className="text-xs text-muted-foreground">Formatting is supported; we’ll save the text content.</p>
           </div>
 
           <div className="space-y-2">

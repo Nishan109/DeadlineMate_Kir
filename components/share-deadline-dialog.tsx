@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -89,6 +89,23 @@ export default function ShareDeadlineDialog({
   const [includeDescription, setIncludeDescription] = useState(true)
   const [includeProjectLink, setIncludeProjectLink] = useState(true)
   const [shareGenerated, setShareGenerated] = useState(false)
+
+  const resetState = () => {
+    setIsLoading(false)
+    setShareUrl("")
+    setCopied(false)
+    setExpirationDays("7")
+    setIncludeDescription(true)
+    setIncludeProjectLink(!!deadline?.project_link)
+    setShareGenerated(false)
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      resetState()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, deadline?.id])
 
   const generateShareLink = async () => {
     if (!deadline) return
@@ -303,12 +320,7 @@ export default function ShareDeadlineDialog({
   }
 
   const handleClose = () => {
-    setShareUrl("")
-    setShareGenerated(false)
-    setCopied(false)
-    setExpirationDays("7")
-    setIncludeDescription(true)
-    setIncludeProjectLink(true)
+    resetState()
     onClose()
   }
 
@@ -328,8 +340,17 @@ export default function ShareDeadlineDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose()
+        } else {
+          resetState()
+        }
+      }}
+    >
+      <DialogContent key={deadline?.id || "new"} className="w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center text-xl font-semibold">
             <Share2 className="w-5 h-5 mr-2" />

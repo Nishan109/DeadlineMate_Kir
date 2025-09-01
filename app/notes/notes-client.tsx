@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Target,
   Plus,
@@ -138,6 +139,8 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [activeFilter, setActiveFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedTag, setSelectedTag] = useState<string>("")
+  const [sortBy, setSortBy] = useState<"updated_desc" | "created_desc" | "title_asc">("updated_desc")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [currentProfile, setCurrentProfile] = useState<UserProfile>({
@@ -243,6 +246,13 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
     }
   }
 
+  // Compute unique tags for filter chips
+  const uniqueTags = useMemo(() => {
+    const set = new Set<string>()
+    for (const n of notes) for (const t of n.tags || []) set.add(t)
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [notes])
+
   // Filter and search notes
   const filteredNotes = useMemo(() => {
     let filtered = notes
@@ -262,6 +272,11 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
         break
     }
 
+    // Apply tag filter
+    if (selectedTag) {
+      filtered = filtered.filter((note) => (note.tags || []).some((t) => t.toLowerCase() === selectedTag.toLowerCase()))
+    }
+
     // Apply search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
@@ -273,13 +288,23 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
       )
     }
 
-    // Sort: pinned first, then by updated_at
-    return filtered.sort((a, b) => {
+    // Sort with pinned-first, then chosen sort
+    const sortFn = (a: Note, b: Note) => {
       if (a.is_pinned && !b.is_pinned) return -1
       if (!a.is_pinned && b.is_pinned) return 1
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    })
-  }, [notes, activeFilter, searchQuery])
+      switch (sortBy) {
+        case "created_desc":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        case "title_asc":
+          return a.title.localeCompare(b.title)
+        case "updated_desc":
+        default:
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      }
+    }
+
+    return [...filtered].sort(sortFn)
+  }, [notes, activeFilter, selectedTag, searchQuery, sortBy])
 
   // Stats
   const stats = useMemo(() => {
@@ -592,16 +617,76 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          {/* Search Bar */}
-          <div className="relative mb-4 sm:mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
-            <Input
-              placeholder="Search notes by title, content, or tags..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 sm:pl-10 max-w-full sm:max-w-md text-sm sm:text-base h-9 sm:h-10"
-            />
+          {/* Search + Tag Filter + Sort */}
+          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
+              <Input
+                placeholder="Search notes by title, content, or tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 sm:pl-10 max-w-full sm:max-w-md text-sm sm:text-base h-9 sm:h-10"
+              />
+            </div>
+
+            {/* Tags scroller */}
+            {uniqueTags.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto py-1">
+                <Badge
+                  onClick={() => setSelectedTag("")}
+                  variant={selectedTag ? "outline" : "default"}
+                  className={`cursor-pointer whitespace-nowrap ${selectedTag ? "" : "bg-emerald-500 hover:bg-emerald-600 text-white"}`}
+                >
+                  All tags
+                </Badge>
+                {uniqueTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    onClick={() => setSelectedTag((t) => (t === tag ? "" : tag))}
+                    variant={selectedTag === tag ? "default" : "secondary"}
+                    className={`cursor-pointer whitespace-nowrap ${selectedTag === tag ? "bg-emerald-500 hover:bg-emerald-600 text-white" : ""}`}
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Sort + Clear */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">Sort by</span>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger className="h-8 sm:h-9 w-[160px] text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="updated_desc">Last updated</SelectItem>
+                    <SelectItem value="created_desc">Recently created</SelectItem>
+                    <SelectItem value="title_asc">Title (A–Z)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(selectedTag || searchQuery || activeFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTag("")
+                    setSearchQuery("")
+                    setActiveFilter("all")
+                  }}
+                  className="bg-transparent h-8 sm:h-9 text-xs sm:text-sm"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
           </div>
+
           {/* Notes Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             {filteredNotes.length === 0 ? (
@@ -613,13 +698,15 @@ export default function NotesClient({ user, initialNotes = [], deadlines = [], i
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No notes found</h3>
                     <p className="text-base text-gray-600 text-center mb-6 max-w-md">
-                      {activeFilter === "all" && !searchQuery
+                      {activeFilter === "all" && !searchQuery && !selectedTag
                         ? "Get started by creating your first note."
                         : searchQuery
                           ? `No notes match "${searchQuery}".`
-                          : `No ${activeFilter} notes at the moment.`}
+                          : selectedTag
+                            ? `No notes with tag "${selectedTag}".`
+                            : `No ${activeFilter} notes at the moment.`}
                     </p>
-                    {activeFilter === "all" && !searchQuery && (
+                    {activeFilter === "all" && !searchQuery && !selectedTag && (
                       <Button onClick={() => setIsAddDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Your First Note

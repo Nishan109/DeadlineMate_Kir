@@ -7,21 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Plus,
-  Search,
-  ExternalLink,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  BarChart3,
-  LinkIcon,
-  Home,
-  Users,
-  StickyNote,
-  ArrowLeft,
-} from "lucide-react"
+import { Plus, Search, ExternalLink, Edit, Trash2, Eye, LinkIcon, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AddQuickLinkDialog } from "@/components/quick-links/add-quick-link-dialog"
@@ -180,244 +166,196 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
+      productivity: "bg-amber-100 text-amber-800",
+      education: "bg-amber-100 text-amber-800",
+      development: "bg-blue-100 text-blue-800",
+      ai: "bg-blue-100 text-blue-800",
       search: "bg-blue-100 text-blue-800",
-      development: "bg-green-100 text-green-800",
-      entertainment: "bg-red-100 text-red-800",
-      work: "bg-purple-100 text-purple-800",
-      social: "bg-pink-100 text-pink-800",
       general: "bg-gray-100 text-gray-800",
-      personal: "bg-indigo-100 text-indigo-800",
-      education: "bg-yellow-100 text-yellow-800",
-      productivity: "bg-orange-100 text-orange-800",
-      ai: "bg-violet-100 text-violet-800",
+      personal: "bg-gray-100 text-gray-800",
+      work: "bg-gray-100 text-gray-800",
+      social: "bg-blue-100 text-blue-800",
+      entertainment: "bg-amber-100 text-amber-800",
     }
     return colors[category] || colors.general
   }
 
   const getColorClass = (color: string) => {
-    const colors: { [key: string]: string } = {
+    const map: { [key: string]: string } = {
       blue: "border-l-blue-500",
-      green: "border-l-green-500",
+      green: "border-l-green-600",
+      amber: "border-l-amber-500",
+      gray: "border-l-gray-400",
       red: "border-l-red-500",
-      purple: "border-l-purple-500",
-      pink: "border-l-pink-500",
-      gray: "border-l-gray-500",
-      yellow: "border-l-yellow-500",
-      orange: "border-l-orange-500",
     }
-    return colors[color] || colors.blue
+    // normalize incoming colors to our palette
+    if (["development", "ai", "search", "social"].includes(color)) return map.blue
+    if (["productivity", "education", "entertainment", "yellow", "orange", "amber"].includes(color)) return map.amber
+    if (["gray", "general", "personal", "work"].includes(color)) return map.gray
+    if (["red"].includes(color)) return map.red
+    return map.green
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-          <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <LinkIcon className="h-8 w-8 text-green-600" />
-              <span className="ml-2 text-xl font-semibold text-gray-900">DeadlineMate</span>
+      {/* Main content */}
+      <main className="flex-1">
+        <div className="py-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            {/* Back to Dashboard (mobile) */}
+            <div className="mb-4 lg:hidden">
+              <Link href="/dashboard">
+                <Button variant="outline" className="flex items-center bg-transparent">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
             </div>
-            <nav className="mt-8 flex-1 px-2 space-y-1">
-              <Link
-                href="/dashboard"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <Home className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Dashboard
-              </Link>
-              <Link
-                href="/calendar"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <Calendar className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Calendar
-              </Link>
-              <Link
-                href="/timetable"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <Calendar className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Time Table
-              </Link>
-              <Link
-                href="/analytics"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <BarChart3 className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Analytics
-              </Link>
-              <Link
-                href="/notes"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <StickyNote className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Notes
-              </Link>
-              <Link
-                href="/quick-links"
-                className="bg-green-100 text-green-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <LinkIcon className="text-green-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Quick Links
-              </Link>
-              <Link
-                href="/profile"
-                className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-              >
-                <Users className="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-5 w-5" />
-                Profile
-              </Link>
-            </nav>
-          </div>
-        </div>
 
-        {/* Main content */}
-        <div className="lg:pl-64 flex flex-col flex-1">
-          <main className="flex-1">
-            <div className="py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                {/* Back to Dashboard Button */}
-                <div className="mb-4 lg:hidden">
+            {/* Header */}
+            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="hidden lg:block">
                   <Link href="/dashboard">
-                    <Button variant="outline" className="flex items-center bg-transparent">
+                    <Button variant="outline" size="sm" className="flex items-center bg-transparent">
                       <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Dashboard
+                      Dashboard
                     </Button>
                   </Link>
                 </div>
-
-                {/* Header */}
-                <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center space-x-4">
-                    {/* Back button for larger screens */}
-                    <div className="hidden lg:block">
-                      <Link href="/dashboard">
-                        <Button variant="outline" size="sm" className="flex items-center bg-transparent">
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Dashboard
-                        </Button>
-                      </Link>
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Quick Links</h1>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Manage your personal links and share them with others
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 sm:mt-0">
-                    <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Link
-                    </Button>
-                  </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Quick Links</h1>
+                  <p className="mt-1 text-sm text-gray-500">Manage your personal links and share them with others</p>
                 </div>
-
-                {/* Search and filters */}
-                <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        placeholder="Search links..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-auto">
-                    <TabsList className="flex flex-wrap gap-1 h-auto p-1">
-                      {categories.map((category) => (
-                        <TabsTrigger
-                          key={category}
-                          value={category}
-                          className="capitalize px-3 py-1.5 text-sm whitespace-nowrap"
-                        >
-                          {category}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                {/* Quick Links Grid */}
-                {filteredQuickLinks.length === 0 ? (
-                  <div className="text-center py-12">
-                    <LinkIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No quick links</h3>
-                    <p className="mt-1 text-sm text-gray-500">Get started by creating your first quick link.</p>
-                    <div className="mt-6">
-                      <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Link
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredQuickLinks.map((link) => (
-                      <Card
-                        key={link.id}
-                        className={`hover:shadow-md transition-shadow border-l-4 ${getColorClass(link.color)}`}
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-lg font-medium text-gray-900 truncate">{link.title}</CardTitle>
-                              <CardDescription className="text-sm text-gray-500 mt-1 line-clamp-2">
-                                {link.description || link.url}
-                              </CardDescription>
-                            </div>
-                            <div className="flex items-center space-x-1 ml-2">
-                              {link.is_public && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Public
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex items-center justify-between">
-                            <Badge className={`text-xs ${getCategoryColor(link.category)}`}>{link.category}</Badge>
-                            <div className="flex items-center space-x-1 text-xs text-gray-500">
-                              <Eye className="h-3 w-3" />
-                              <span>{link.click_count}</span>
-                            </div>
-                          </div>
-                          <div className="mt-4 flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleLinkClick(link)}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Open
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleEditClick(link)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700 bg-transparent"
-                              onClick={() => handleDeleteClick(link)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+              </div>
+              <div className="mt-4 sm:mt-0">
+                <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Link
+                </Button>
               </div>
             </div>
-          </main>
+
+            {/* Search and filters */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 sticky top-0 z-[1] bg-gray-50/80 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60 py-2">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search links..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 focus-visible:ring-2 focus-visible:ring-green-600"
+                    aria-label="Search quick links"
+                  />
+                </div>
+              </div>
+              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-auto">
+                <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-white shadow-sm border rounded-md">
+                  {categories.map((category) => (
+                    <TabsTrigger
+                      key={category}
+                      value={category}
+                      className="capitalize px-3 py-1.5 text-sm whitespace-nowrap data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
+                      aria-label={`Filter by ${category}`}
+                    >
+                      {category}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Quick Links Grid */}
+            {filteredQuickLinks.length === 0 ? (
+              <div className="text-center py-12">
+                <LinkIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No quick links</h3>
+                <p className="mt-1 text-sm text-gray-500">Get started by creating your first quick link.</p>
+                <div className="mt-6">
+                  <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Link
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredQuickLinks.map((link) => (
+                  <Card
+                    key={link.id}
+                    className={`group hover:shadow-lg transition-shadow border-l-4 ${getColorClass(
+                      link.color || link.category,
+                    )} bg-white`}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-[15px] font-semibold text-gray-900 truncate">
+                            {link.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            {link.description || link.url}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center space-x-1 ml-2">
+                          {link.is_public ? (
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                              Public
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                              Private
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <Badge className={`text-xs ${getCategoryColor(link.category)}`}>{link.category}</Badge>
+                        <div className="flex items-center space-x-1 text-xs text-gray-500" aria-label="Total clicks">
+                          <Eye className="h-3 w-3" />
+                          <span>{link.click_count}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          onClick={() => handleLinkClick(link)}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          aria-label={`Open ${link.title}`}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Open
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditClick(link)}
+                          aria-label={`Edit ${link.title}`}
+                          className="bg-white"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 bg-white"
+                          onClick={() => handleDeleteClick(link)}
+                          aria-label={`Delete ${link.title}`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Dialogs */}
       <AddQuickLinkDialog
@@ -427,7 +365,6 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
         userId={user?.id || "demo-user"}
         isDemoMode={isDemo}
       />
-
       <EditQuickLinkDialog
         isOpen={isEditDialogOpen}
         onClose={() => {
@@ -438,7 +375,6 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
         quickLink={selectedQuickLink}
         isDemoMode={isDemo}
       />
-
       <DeleteQuickLinkDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => {

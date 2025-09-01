@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Pin, Edit, Trash2, MoreHorizontal, Calendar, Clock, LinkIcon, Tag, X } from "lucide-react"
+import { Pin, Edit, Trash2, MoreHorizontal, Calendar, Clock, LinkIcon, Tag } from "lucide-react"
 import { format } from "date-fns"
 
 interface Note {
@@ -105,7 +105,12 @@ export default function ViewNoteDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0 overflow-hidden">
         {/* Color-coded Header */}
         <div className={`${headerColorClasses} px-3 sm:px-4 lg:px-6 py-3 sm:py-4 relative`}>
@@ -158,15 +163,6 @@ export default function ViewNoteDialog({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-current hover:bg-black/10"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
             </div>
           </div>
         </div>

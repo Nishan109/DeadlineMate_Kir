@@ -858,6 +858,7 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
       />
 
       <ShareDeadlineDialog
+        key={selectedDeadline?.id || "new"}
         isOpen={isShareDialogOpen}
         onClose={() => {
           setIsShareDialogOpen(false)
