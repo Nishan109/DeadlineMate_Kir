@@ -597,11 +597,22 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       })
 
     // Calculate deadline status
+    // Parse the due_date and handle timezone properly
     const dueDate = new Date(deadline.due_date)
     const now = new Date()
     const isOverdue = dueDate < now && deadline.status !== "completed"
     const timeUntilDue = dueDate.getTime() - now.getTime()
     const daysUntilDue = Math.ceil(timeUntilDue / (1000 * 60 * 60 * 24))
+    
+    // Debug logging to help identify timezone issues
+    console.log("🕐 Date Debug Info:", {
+      originalDueDate: deadline.due_date,
+      parsedDueDate: dueDate.toISOString(),
+      localDueDate: dueDate.toLocaleString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      formattedTime: format(dueDate, "h:mm a"),
+      utcTime: dueDate.toUTCString(),
+    })
 
     const getPriorityColor = (priority: string) => {
       switch (priority) {
