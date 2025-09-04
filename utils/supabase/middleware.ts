@@ -6,6 +6,11 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Skip authentication for shared deadline routes (public access)
+  if (request.nextUrl.pathname.startsWith('/shared/')) {
+    return supabaseResponse
+  }
+
   // Check if Supabase environment variables are available
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
@@ -46,11 +51,26 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Try to get user, but handle errors gracefully
+  let user = null
+  try {
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser()
+    
+    if (authError) {
+      console.warn('Auth error in middleware (non-critical):', authError.message)
+      // Don't throw - just continue without user
+    } else {
+      user = authUser
+    }
+  } catch (error) {
+    console.warn('Auth check failed in middleware (non-critical):', error)
+    // Don't throw - just continue without user
+  }
 
-  // Only enforce authentication if we have Supabase configured
+  // Only enforce authentication if we have Supabase configured and user is required
   if (
     supabaseUrl &&
     supabaseAnonKey &&
