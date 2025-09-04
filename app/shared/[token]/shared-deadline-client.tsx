@@ -182,13 +182,34 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
   const timeUntilDue = dueDate.getTime() - now.getTime()
   const daysUntilDue = Math.ceil(timeUntilDue / (1000 * 60 * 60 * 24))
   
+  // Create a date formatter for Asia/Kolkata timezone
+  const kolkataFormatter = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  
+  // Format the date for Asia/Kolkata timezone
+  const kolkataDate = new Date(dueDate.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
+  
+  // Use the original date since it's already in Asia/Kolkata timezone
+  const displayDate = dueDate
+  
   // Debug logging to help identify timezone issues
   console.log("🕐 Client Date Debug Info:", {
     originalDueDate: deadline.due_date,
     parsedDueDate: dueDate.toISOString(),
     localDueDate: dueDate.toLocaleString(),
+    kolkataDate: kolkataDate.toLocaleString(),
+    kolkataFormatted: kolkataFormatter.format(dueDate),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     formattedTime: format(dueDate, "h:mm a"),
+    kolkataTime: format(kolkataDate, "h:mm a"),
+    displayTime: format(displayDate, "h:mm a"),
     utcTime: dueDate.toUTCString(),
   })
 
@@ -281,11 +302,11 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
                       <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-gray-900 text-sm sm:text-base">
-                          {format(dueDate, "EEEE, MMMM do, yyyy")}
+                          {format(displayDate, "EEEE, MMMM do, yyyy")}
                         </p>
                         <p className="text-xs sm:text-sm text-gray-600 flex items-center">
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          {format(dueDate, "h:mm a")}
+                          {format(displayDate, "h:mm a")}
                         </p>
                       </div>
                     </div>
