@@ -462,9 +462,9 @@ export function TimetableClient({
 
   const filteredActivities = useMemo(() => {
     return activities.filter((activity) => {
-      const hasScheduleForDay = activity.schedules.some(
+      const hasScheduleForDay = activity.schedules?.some(
         (schedule) => schedule.day_of_week === selectedDay && schedule.is_active,
-      )
+      ) || false
       if (!hasScheduleForDay) return false
 
       if (searchQuery) {
@@ -540,7 +540,7 @@ export function TimetableClient({
     })
     const tabs: { label: string; value: string; count: number }[] = []
     const totalForDay = activities.filter((a) =>
-      a.schedules.some((s) => s.day_of_week === selectedDay && s.is_active),
+      a.schedules?.some((s) => s.day_of_week === selectedDay && s.is_active) || false,
     ).length
     tabs.push({ label: "All", value: "all", count: totalForDay })
     counts.forEach((count, key) => {
@@ -551,7 +551,7 @@ export function TimetableClient({
         count: activities.filter(
           (a) =>
             (a.category || "uncategorized").toLowerCase() === key &&
-            a.schedules.some((s) => s.day_of_week === selectedDay && s.is_active),
+            (a.schedules?.some((s) => s.day_of_week === selectedDay && s.is_active) || false),
         ).length,
       })
     })
