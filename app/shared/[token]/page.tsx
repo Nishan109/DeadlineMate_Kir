@@ -616,12 +616,35 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     })
     
     // Create a proper date object for Asia/Kolkata timezone
-    // Since the database already stores the time in Asia/Kolkata timezone (+05:30),
-    // we need to ensure it's displayed correctly
+    // Since the database stores time in Asia/Kolkata timezone (+05:30),
+    // we need to create a date that represents the local time correctly
     const kolkataDate = new Date(dueDate.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
     
-    // Alternative approach: Use the date directly since it's already in the correct timezone
-    const displayDate = dueDate // Use the original date since it's already in Asia/Kolkata timezone
+    // The key fix: Create a date that represents the Asia/Kolkata time correctly
+    // Since the database stores "2025-09-08 10:55:00+05:30", we need to handle this properly
+    const dateStr = deadline.due_date // e.g., "2025-09-08 10:55:00+05:30"
+    
+    // Parse the date string to extract the local time components
+    const dateMatch = dateStr.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/)
+    let displayDate = new Date(dateStr) // fallback
+    
+    if (dateMatch) {
+      const [, datePart, timePart] = dateMatch
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hours, minutes, seconds] = timePart.split(':').map(Number)
+      
+      // Create a date object that represents the local time in Asia/Kolkata
+      // This creates a date in the local timezone that represents the Asia/Kolkata time
+      displayDate = new Date(year, month - 1, day, hours, minutes, seconds)
+      
+      // Debug the alternative approach
+      console.log("🕐 Alternative Date Debug:", {
+        dateMatch,
+        year, month, day, hours, minutes, seconds,
+        kolkataDisplayDate: displayDate.toISOString(),
+        kolkataDisplayTime: format(displayDate, "h:mm a"),
+      })
+    }
     
     // Debug logging to help identify timezone issues
     console.log("🕐 Date Debug Info:", {
@@ -635,6 +658,8 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       kolkataTime: format(kolkataDate, "h:mm a"),
       displayTime: format(displayDate, "h:mm a"),
       utcTime: dueDate.toUTCString(),
+      displayDateISO: displayDate.toISOString(),
+      displayDateLocal: displayDate.toLocaleString(),
     })
 
     const getPriorityColor = (priority: string) => {
