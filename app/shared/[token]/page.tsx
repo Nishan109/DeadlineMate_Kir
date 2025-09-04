@@ -646,6 +646,36 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       })
     }
     
+    // Additional fix: Use Intl.DateTimeFormat to ensure correct timezone display
+    const kolkataTimeFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+    
+    const kolkataDateFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    
+    // Create a proper date object for display
+    const properDisplayDate = new Date(dateStr)
+    const kolkataTime = kolkataTimeFormatter.format(properDisplayDate)
+    const kolkataDate = kolkataDateFormatter.format(properDisplayDate)
+    
+    console.log("🕐 Final Timezone Debug:", {
+      originalDate: dateStr,
+      properDisplayDate: properDisplayDate.toISOString(),
+      kolkataTime,
+      kolkataDate,
+      displayDate: displayDate.toISOString(),
+      displayTime: format(displayDate, "h:mm a"),
+    })
+    
     // Debug logging to help identify timezone issues
     console.log("🕐 Date Debug Info:", {
       originalDueDate: deadline.due_date,
@@ -751,11 +781,11 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                         <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                         <div>
                           <p className="font-medium text-gray-900 text-sm sm:text-base">
-                            {format(displayDate, "EEEE, MMMM do, yyyy")}
+                            {kolkataDate}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600 flex items-center">
                             <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            {format(displayDate, "h:mm a")}
+                            {kolkataTime}
                           </p>
                         </div>
                       </div>
