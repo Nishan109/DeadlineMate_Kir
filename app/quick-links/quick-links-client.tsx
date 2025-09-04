@@ -197,10 +197,10 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Main content */}
       <main className="flex-1">
-        <div className="py-6">
+        <div className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
             {/* Back to Dashboard (mobile) */}
             <div className="mb-4 lg:hidden">
@@ -213,23 +213,29 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
             </div>
 
             {/* Header */}
-            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white p-6 rounded-xl shadow-sm">
               <div className="flex items-center space-x-4">
                 <div className="hidden lg:block">
                   <Link href="/dashboard">
-                    <Button variant="outline" size="sm" className="flex items-center bg-transparent">
+                    <Button variant="outline" size="sm" className="flex items-center bg-transparent rounded-full hover:bg-gray-50 transition-colors">
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Dashboard
                     </Button>
                   </Link>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Quick Links</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+                    <LinkIcon className="h-6 w-6 mr-2 text-green-600" />
+                    Quick Links
+                  </h1>
                   <p className="mt-1 text-sm text-gray-500">Manage your personal links and share them with others</p>
                 </div>
               </div>
               <div className="mt-4 sm:mt-0">
-                <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+                <Button 
+                  onClick={() => setIsAddDialogOpen(true)} 
+                  className="bg-[#059669] hover:bg-[#047857] rounded-full shadow-sm transition-all duration-200 hover:shadow hover:translate-y-[-1px]"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Link
                 </Button>
@@ -237,26 +243,26 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
             </div>
 
             {/* Search and filters */}
-            <div className="mb-6 flex flex-col sm:flex-row gap-4 sticky top-0 z-[1] bg-gray-50/80 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60 py-2">
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 sticky top-0 z-[1] bg-gray-50/90 backdrop-blur supports-[backdrop-filter]:bg-gray-50/80 py-3 px-4 rounded-xl shadow-sm border border-gray-100">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#059669] h-4 w-4" />
                   <Input
                     placeholder="Search links..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 focus-visible:ring-2 focus-visible:ring-green-600"
+                    className="pl-10 focus-visible:ring-2 focus-visible:ring-[#059669] rounded-full border-gray-200 shadow-sm"
                     aria-label="Search quick links"
                   />
                 </div>
               </div>
               <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-auto">
-                <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-white shadow-sm border rounded-md">
+                <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-white shadow-sm border rounded-full">
                   {categories.map((category) => (
                     <TabsTrigger
                       key={category}
                       value={category}
-                      className="capitalize px-3 py-1.5 text-sm whitespace-nowrap data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
+                      className="capitalize px-3 py-1.5 text-sm whitespace-nowrap rounded-full data-[state=active]:bg-[#059669] data-[state=active]:text-white transition-colors"
                       aria-label={`Filter by ${category}`}
                     >
                       {category}
@@ -268,14 +274,19 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
 
             {/* Quick Links Grid */}
             {filteredQuickLinks.length === 0 ? (
-              <div className="text-center py-12">
-                <LinkIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No quick links</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by creating your first quick link.</p>
-                <div className="mt-6">
-                  <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+              <div className="text-center py-16 px-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="w-20 h-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                  <LinkIcon className="h-10 w-10 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">No quick links found</h3>
+                <p className="mt-2 text-gray-500 max-w-md mx-auto">Get started by creating your first quick link or try adjusting your search filters.</p>
+                <div className="mt-8">
+                  <Button 
+                    onClick={() => setIsAddDialogOpen(true)} 
+                    className="bg-[#059669] hover:bg-[#047857] rounded-full shadow-sm transition-all duration-200 hover:shadow hover:translate-y-[-1px] px-6"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Link
+                    Add Your First Link
                   </Button>
                 </div>
               </div>
@@ -284,14 +295,21 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
                 {filteredQuickLinks.map((link) => (
                   <Card
                     key={link.id}
-                    className={`group hover:shadow-lg transition-shadow border-l-4 ${getColorClass(
+                    className={`group hover:shadow-md hover:translate-y-[-2px] transition-all duration-200 rounded-xl overflow-hidden ${getColorClass(
                       link.color || link.category,
-                    )} bg-white`}
+                    )} bg-white border-0 shadow`}
                   >
-                    <CardHeader className="pb-3">
+                    <div className={`h-1 w-full ${link.color === 'blue' ? 'bg-blue-500' : 
+                                           link.color === 'green' ? 'bg-green-600' : 
+                                           link.color === 'red' ? 'bg-red-500' : 
+                                           link.color === 'purple' ? 'bg-purple-500' : 
+                                           link.color === 'pink' ? 'bg-pink-500' : 
+                                           link.color === 'yellow' ? 'bg-yellow-500' : 
+                                           link.color === 'orange' ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                    <CardHeader className="pb-2 pt-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-[15px] font-semibold text-gray-900 truncate">
+                          <CardTitle className="text-base font-semibold text-gray-900 truncate group-hover:text-green-700 transition-colors">
                             {link.title}
                           </CardTitle>
                           <CardDescription className="text-sm text-gray-600 mt-1 line-clamp-2">
@@ -300,20 +318,20 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
                         </div>
                         <div className="flex items-center space-x-1 ml-2">
                           {link.is_public ? (
-                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">
                               Public
                             </Badge>
                           ) : (
-                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5">
                               Private
                             </Badge>
                           )}
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 pb-4">
                       <div className="flex items-center justify-between">
-                        <Badge className={`text-xs ${getCategoryColor(link.category)}`}>{link.category}</Badge>
+                        <Badge className={`text-xs ${getCategoryColor(link.category)} rounded-full px-2 py-0.5 capitalize`}>{link.category}</Badge>
                         <div className="flex items-center space-x-1 text-xs text-gray-500" aria-label="Total clicks">
                           <Eye className="h-3 w-3" />
                           <span>{link.click_count}</span>
@@ -323,7 +341,7 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
                         <Button
                           size="sm"
                           onClick={() => handleLinkClick(link)}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          className="flex-1 bg-[#059669] hover:bg-[#047857] rounded-full shadow-sm transition-all duration-200 hover:shadow"
                           aria-label={`Open ${link.title}`}
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
@@ -334,14 +352,14 @@ export function QuickLinksClient({ user, profile, initialQuickLinks }: QuickLink
                           variant="outline"
                           onClick={() => handleEditClick(link)}
                           aria-label={`Edit ${link.title}`}
-                          className="bg-white"
+                          className="bg-white rounded-full hover:bg-gray-50 transition-colors"
                         >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600 hover:text-red-700 bg-white"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-white rounded-full transition-colors"
                           onClick={() => handleDeleteClick(link)}
                           aria-label={`Delete ${link.title}`}
                         >

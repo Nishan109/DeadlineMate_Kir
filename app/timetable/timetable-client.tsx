@@ -479,7 +479,7 @@ export function TimetableClient({
         }
       }
 
-      if (activeFilter !== "all" && activity.category !== activeFilter) {
+      if (activeFilter !== "all" && activity.category?.toLowerCase() !== activeFilter.toLowerCase()) {
         return false
       }
 
@@ -550,7 +550,7 @@ export function TimetableClient({
         value: key,
         count: activities.filter(
           (a) =>
-            (a.category || "uncategorized").toLowerCase() === key &&
+            (a.category || "uncategorized").toLowerCase() === key.toLowerCase() &&
             (a.schedules?.some((s) => s.day_of_week === selectedDay && s.is_active) || false),
         ).length,
       })
@@ -683,12 +683,12 @@ export function TimetableClient({
                 <Calendar className="w-4 h-4 mr-2 text-emerald-600" />
                 Week Overview
               </h3>
-              <div className="grid grid-cols-7 lg:grid-cols-1 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-7 lg:grid-cols-1 gap-2">
                 {DAYS_OF_WEEK.map((day) => (
                   <button
                     key={day.value}
                     onClick={() => setSelectedDay(day.value)}
-                    className={`relative p-3 text-sm rounded-xl transition-all duration-200 border ${
+                    className={`relative p-2 sm:p-3 text-xs sm:text-sm rounded-lg sm:rounded-xl transition-all duration-200 border ${
                       selectedDay === day.value
                         ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-300 shadow-lg transform scale-105"
                         : "bg-white/50 text-gray-700 hover:bg-white hover:shadow-md border-gray-200/50"
@@ -696,11 +696,11 @@ export function TimetableClient({
                     aria-pressed={selectedDay === day.value}
                     aria-label={`Select ${day.full}`}
                   >
-                    <div className="flex items-center justify-between lg:justify-start">
+                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between lg:justify-start">
                       <span className="lg:hidden font-medium">{day.short}</span>
                       <span className="hidden lg:inline font-medium">{day.full}</span>
                       {isToday(day.value) && (
-                        <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        <span className={`mt-1 sm:mt-0 sm:ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
                           selectedDay === day.value 
                             ? "bg-white/20 text-white" 
                             : "bg-emerald-100 text-emerald-700"
