@@ -584,181 +584,239 @@ export function TimetableClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:py-6 gap-4 sm:gap-0">
-          <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Time Table</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your daily activities and schedule</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search activities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full sm:w-64 text-sm"
-                aria-label="Search activities"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Enhanced Header with gradient background */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-6 gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  Time Table
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">Organize your day with precision and clarity</p>
+              </div>
             </div>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Activity
-            </Button>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search activities..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-full sm:w-72 bg-white/70 backdrop-blur-sm border-gray-200/50 focus:bg-white transition-all duration-200"
+                  aria-label="Search activities"
+                />
+              </div>
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Activity
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Compact sticky toolbar for day navigation */}
-        <div className="py-3 border-t border-gray-100">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={handlePrevDay} aria-label="Previous day">
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-sm text-gray-700 font-medium">{formatSelectedDayDate()}</span>
-              <Button variant="outline" size="sm" onClick={handleNextDay} aria-label="Next day">
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={jumpToToday} className="ml-1">
-                Today
-              </Button>
-            </div>
-            <div className="hidden sm:flex items-center text-xs text-gray-500">
-              <Calendar className="w-4 h-4 mr-1" />
-              Local time:{" "}
-              {new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+          {/* Enhanced day navigation toolbar */}
+          <div className="py-4 border-t border-gray-100/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200/50 p-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handlePrevDay} 
+                    className="hover:bg-gray-100/70"
+                    aria-label="Previous day"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="px-4 py-2">
+                    <span className="text-sm font-semibold text-gray-900">{formatSelectedDayDate()}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleNextDay} 
+                    className="hover:bg-gray-100/70"
+                    aria-label="Next day"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={jumpToToday} 
+                  className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:bg-white"
+                >
+                  Today
+                </Button>
+              </div>
+              
+              <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500 bg-white/50 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200/30">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span>
+                  {new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row">
-        {/* Sidebar */}
-        {/* Make sidebar sticky on large screens for easier scanning */}
-        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 sm:p-6 lg:sticky lg:top-24 self-start">
-          {/* Day Navigation */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Navigation</h3>
-            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
-              <div className="flex lg:hidden items-center gap-2 mb-2">
-                <Button variant="outline" size="sm" onClick={handlePrevDay} className="flex-shrink-0 bg-transparent">
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleNextDay} className="flex-shrink-0 bg-transparent">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-4 sm:p-6">
+        {/* Enhanced Sidebar */}
+        <div className="w-full lg:w-80 space-y-6">
+          {/* Day Navigation Card */}
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-emerald-600" />
+                Week Overview
+              </h3>
+              <div className="grid grid-cols-7 lg:grid-cols-1 gap-2">
+                {DAYS_OF_WEEK.map((day) => (
+                  <button
+                    key={day.value}
+                    onClick={() => setSelectedDay(day.value)}
+                    className={`relative p-3 text-sm rounded-xl transition-all duration-200 border ${
+                      selectedDay === day.value
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-300 shadow-lg transform scale-105"
+                        : "bg-white/50 text-gray-700 hover:bg-white hover:shadow-md border-gray-200/50"
+                    }`}
+                    aria-pressed={selectedDay === day.value}
+                    aria-label={`Select ${day.full}`}
+                  >
+                    <div className="flex items-center justify-between lg:justify-start">
+                      <span className="lg:hidden font-medium">{day.short}</span>
+                      <span className="hidden lg:inline font-medium">{day.full}</span>
+                      {isToday(day.value) && (
+                        <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          selectedDay === day.value 
+                            ? "bg-white/20 text-white" 
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}>
+                          Today
+                        </span>
+                      )}
+                    </div>
+                    {selectedDay === day.value && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-600/20 animate-pulse"></div>
+                    )}
+                  </button>
+                ))}
               </div>
-              {DAYS_OF_WEEK.map((day) => (
-                <button
-                  key={day.value}
-                  onClick={() => setSelectedDay(day.value)}
-                  className={`flex-shrink-0 lg:flex-shrink px-3 py-2 text-sm rounded-lg transition-colors border ${
-                    selectedDay === day.value
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "text-gray-700 hover:bg-gray-50 border-gray-200"
-                  }`}
-                  aria-pressed={selectedDay === day.value}
-                  aria-label={`Select ${day.full}`}
-                >
-                  <span className="lg:hidden">{day.short}</span>
-                  <span className="hidden lg:inline">{day.full}</span>
-                  {isToday(day.value) && (
-                    <span className="ml-2 inline-block rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px]">
-                      Today
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Current Activity */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Current Activity</h3>
-            <CurrentActivityCard activity={currentActivity} formatTime={formatTime} getColorClass={getColorClass} />
-          </div>
+          {/* Current Activity Card */}
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></div>
+                Current Activity
+              </h3>
+              <CurrentActivityCard activity={currentActivity} formatTime={formatTime} getColorClass={getColorClass} />
+            </CardContent>
+          </Card>
 
-          {/* Next Activity */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Up Next</h3>
-            <NextActivityCard activity={nextActivity} formatTime={formatTime} getColorClass={getColorClass} />
-          </div>
+          {/* Next Activity Card */}
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                Up Next
+              </h3>
+              <NextActivityCard activity={nextActivity} formatTime={formatTime} getColorClass={getColorClass} />
+            </CardContent>
+          </Card>
 
-          {/* Quick Add */}
+          {/* Quick Add Button */}
           <div className="hidden lg:block">
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-sm"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 py-3"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Activity
+              <Plus className="w-5 h-5 mr-2" />
+              Add New Activity
             </Button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6">
-          {/* Dynamic category chips with counts and horizontal scroll on mobile */}
-          <div className="mb-6">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {computedTabs.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => setActiveFilter(tab.value)}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-full border transition-colors whitespace-nowrap ${
-                    activeFilter === tab.value
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                  }`}
-                  aria-pressed={activeFilter === tab.value}
-                >
-                  {tab.label}{" "}
-                  <span
-                    className={`ml-2 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-                      activeFilter === tab.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-700"
-                    }`}
+        {/* Enhanced Main Content */}
+        <div className="flex-1 space-y-6">
+          {/* Enhanced Category Filter */}
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900">Filter Activities</h3>
+                {(searchQuery || activeFilter !== "all") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("")
+                      setActiveFilter("all")
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
                   >
-                    {tab.count}
-                  </span>
-                </button>
-              ))}
-              {(searchQuery || activeFilter !== "all") && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("")
-                    setActiveFilter("all")
-                  }}
-                  className="ml-1 px-3 py-2 text-xs sm:text-sm rounded-full border bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Clear filters"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
+                    Clear All
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {computedTabs.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveFilter(tab.value)}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200 whitespace-nowrap ${
+                      activeFilter === tab.value
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-300 shadow-lg transform scale-105"
+                        : "bg-white/50 text-gray-700 border-gray-200/50 hover:bg-white hover:shadow-md"
+                    }`}
+                    aria-pressed={activeFilter === tab.value}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        activeFilter === tab.value 
+                          ? "bg-white/20 text-white" 
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Activities Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {/* Enhanced Activities Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredActivities.map((activity) => (
               <Card
                 key={activity.id}
-                className={`hover:shadow-md transition-shadow ${getAccentBorder(activity.color)}`}
+                className={`group bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-xl hover:bg-white transition-all duration-300 transform hover:-translate-y-1 ${getAccentBorder(activity.color)}`}
               >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start justify-between mb-3">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{activity.title}</h3>
+                      <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-emerald-700 transition-colors">
+                        {activity.title}
+                      </h3>
                       {activity.category && (
                         <span
-                          className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${getColorClass(activity.color)}`}
+                          className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${getColorClass(activity.color)}`}
                         >
                           {activity.category}
                         </span>
@@ -768,7 +826,7 @@ export function TimetableClient({
                       variant="ghost"
                       size="sm"
                       onClick={() => setEditingActivity(activity)}
-                      className="flex-shrink-0 h-8 w-8 p-0"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 hover:bg-gray-100"
                       aria-label={`Edit ${activity.title}`}
                     >
                       <Settings className="w-4 h-4" />
@@ -776,29 +834,57 @@ export function TimetableClient({
                   </div>
 
                   {activity.description && (
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2">{activity.description}</p>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">
+                      {activity.description}
+                    </p>
                   )}
 
                   {activity.location && (
-                    <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-3">
-                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                    <div className="flex items-center text-sm text-gray-500 mb-4 bg-gray-50/50 rounded-lg p-2">
+                      <MapPin className="w-4 h-4 mr-2 flex-shrink-0 text-gray-400" />
                       <span className="truncate">{activity.location}</span>
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    {activity.schedules.slice(0, 2).map((schedule, index) => (
-                      <div key={index} className="flex items-center justify-between text-xs sm:text-sm">
-                        <span className="text-gray-600">
-                          {DAYS_OF_WEEK.find((d) => d.value === schedule.day_of_week)?.short}
-                        </span>
-                        <span className="font-medium">
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Schedule</h4>
+                    {activity.schedules
+                      .filter(schedule => schedule.day_of_week === selectedDay && schedule.is_active)
+                      .slice(0, 3)
+                      .map((schedule, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50/50 to-white/50 rounded-lg border border-gray-100/50">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${
+                            activity.color === 'green' ? 'bg-green-400' :
+                            activity.color === 'blue' ? 'bg-blue-400' :
+                            activity.color === 'purple' ? 'bg-purple-400' :
+                            activity.color === 'red' ? 'bg-red-400' :
+                            activity.color === 'yellow' ? 'bg-yellow-400' :
+                            activity.color === 'orange' ? 'bg-orange-400' :
+                            activity.color === 'pink' ? 'bg-pink-400' :
+                            activity.color === 'indigo' ? 'bg-indigo-400' :
+                            'bg-gray-400'
+                          }`}></div>
+                          <span className="text-sm font-medium text-gray-700">
+                            {DAYS_OF_WEEK.find((d) => d.value === schedule.day_of_week)?.short}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">
                           {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
                         </span>
                       </div>
                     ))}
-                    {activity.schedules.length > 2 && (
-                      <div className="text-xs text-gray-500">+{activity.schedules.length - 2} more</div>
+                    
+                    {activity.schedules.filter(s => s.day_of_week === selectedDay && s.is_active).length === 0 && (
+                      <div className="text-center py-4 text-gray-500 text-sm">
+                        No schedule for {DAYS_OF_WEEK.find(d => d.value === selectedDay)?.full}
+                      </div>
+                    )}
+                    
+                    {activity.schedules.filter(s => s.day_of_week === selectedDay && s.is_active).length > 3 && (
+                      <div className="text-center text-xs text-gray-500">
+                        +{activity.schedules.filter(s => s.day_of_week === selectedDay && s.is_active).length - 3} more
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -806,21 +892,29 @@ export function TimetableClient({
             ))}
           </div>
 
+          {/* Empty State */}
           {filteredActivities.length === 0 && (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No activities for this day</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                {searchQuery ? "Try adjusting your search terms" : "Get started by adding your first activity"}
-              </p>
-              <Button
-                onClick={() => setIsAddDialogOpen(true)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-sm sm:text-base"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Activity
-              </Button>
-            </div>
+            <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 shadow-lg">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Activities Found</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {searchQuery || activeFilter !== "all" 
+                    ? "Try adjusting your search or filter criteria to find activities."
+                    : `No activities scheduled for ${DAYS_OF_WEEK.find(d => d.value === selectedDay)?.full}. Start by adding your first activity.`
+                  }
+                </p>
+                <Button
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Activity
+                </Button>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

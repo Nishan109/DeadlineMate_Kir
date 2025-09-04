@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import type { Metadata } from "next"
+import SharedDeadlineClient from "./shared-deadline-client"
 
 interface PageProps {
   params: {
@@ -90,14 +91,32 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     environment: process.env.NODE_ENV,
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : 'server',
   }
 
   console.log("🔍 SharedDeadlinePage Debug Info:", debugInfo)
 
+  // For mobile devices or when server-side rendering fails, use client-side rendering
+  // This helps with mobile-specific issues where SSR might fail
+  const isMobileFallback = process.env.NODE_ENV === 'production' && 
+    (typeof window === 'undefined' ? false : /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+
+  if (isMobileFallback) {
+    console.log("📱 Using mobile fallback - client-side rendering")
+    return <SharedDeadlineClient token={params.token} />
+  }
+
   try {
     // Initialize Supabase client with proper error handling
     console.log("🔧 Initializing Supabase client...")
-    const supabase = await createClient()
+    
+    // Add timeout for mobile devices that might have slower connections
+    const supabasePromise = createClient()
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Supabase client initialization timeout")), 10000)
+    )
+    
+    const supabase = await Promise.race([supabasePromise, timeoutPromise]) as any
 
     // Verify the client is properly initialized
     if (!supabase) {
@@ -328,9 +347,9 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       const result = await supabase.from("shared_deadlines").select("id").limit(1)
       tableCheck = result.data
       tableError = result.error
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Table check failed with exception:", err)
-      tableError = err as any
+      tableError = err
     }
 
     // Handle client initialization errors
@@ -438,7 +457,8 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     let queryError
 
     try {
-      const result = await supabase
+      // Add timeout for database queries on mobile devices
+      const queryPromise = supabase
         .from("shared_deadlines")
         .select(`
           id,
@@ -467,11 +487,16 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         .eq("is_active", true)
         .single()
 
+      const queryTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Database query timeout")), 15000)
+      )
+
+      const result = await Promise.race([queryPromise, queryTimeoutPromise]) as any
       sharedDeadline = result.data
       queryError = result.error
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Query failed with exception:", err)
-      queryError = err as any
+      queryError = err
     }
 
     console.log("📊 Query result:", {
@@ -563,7 +588,7 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
       .from("shared_deadlines")
       .update({ view_count: (sharedDeadline.view_count || 0) + 1 })
       .eq("id", sharedDeadline.id)
-      .then(({ error }) => {
+      .then(({ error }: { error: any }) => {
         if (error) {
           console.error("⚠️ Error updating view count:", error)
         } else {
@@ -766,34 +791,11 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
         </footer>
       </div>
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching shared deadline:", error)
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <CardTitle className="text-red-900">Error Loading Deadline</CardTitle>
-            <CardDescription className="text-red-700">
-              An error occurred while loading the shared deadline.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="font-medium text-red-900 mb-2">Error Details:</h4>
-              <p className="text-sm text-red-800">{error.message}</p>
-            </div>
-            <div className="flex space-x-2">
-              <Link href="/" className="flex-1">
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Go to Homepage</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    // If server-side rendering fails, try client-side rendering as fallback
+    console.log("🔄 Server-side rendering failed, falling back to client-side rendering")
+    return <SharedDeadlineClient token={params.token} />
   }
 }

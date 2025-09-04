@@ -6,9 +6,26 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Check if Supabase environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_project_url_here') {
+    // If no Supabase config or placeholder values, just pass through the request (demo mode)
+    return supabaseResponse
+  }
+
+  // Validate URL format
+  try {
+    new URL(supabaseUrl)
+  } catch (error) {
+    console.warn('Invalid Supabase URL format, running in demo mode:', supabaseUrl)
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -33,7 +50,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Only enforce authentication if we have Supabase configured
   if (
+    supabaseUrl &&
+    supabaseAnonKey &&
     !user &&
     !request.nextUrl.pathname.startsWith("/auth") &&
     !request.nextUrl.pathname.startsWith("/") &&

@@ -51,8 +51,8 @@ export async function createClient() {
     try {
       cookieStore = await cookies()
     } catch (cookieError) {
-      console.warn("⚠️ Failed to access cookies, this might be a client-side call:", cookieError)
-      // Return a mock client when cookies are not available
+      console.warn("⚠️ Failed to access cookies, this might be a client-side call or mobile device:", cookieError)
+      // Return a mock client when cookies are not available (common on mobile)
       return {
         auth: {
           getUser: () =>

@@ -207,43 +207,58 @@ export default async function TimetablePage({ searchParams }: { searchParams: { 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Demo Mode Banner */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Enhanced Demo Mode Banner */}
       {isDemoMode && (
-        <div className="bg-amber-100 border-b border-amber-200 px-4 py-2">
-          <div className="max-w-7xl mx-auto text-center">
-            <p className="text-sm text-amber-800">
-              🎯 <strong>Demo Mode:</strong> You're viewing a preview with sample timetable data.
-              <a href="/auth" className="underline ml-1">
-                Try the real authentication
-              </a>
-            </p>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-center gap-2 text-center">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <p className="text-sm text-amber-800">
+                <strong>Demo Mode:</strong> You're viewing a preview with sample timetable data.
+                <a href="/auth" className="underline ml-1 hover:text-amber-900 transition-colors">
+                  Try the real authentication
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <a
-              href="/dashboard"
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Dashboard
-            </a>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Time Table</h1>
-              <p className="text-sm text-gray-600">Manage your daily schedule and activities</p>
+      {/* Enhanced Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <a
+                href="/dashboard"
+                className="inline-flex items-center px-4 py-2 bg-white/70 backdrop-blur-sm border border-gray-200/50 shadow-sm text-sm font-medium rounded-xl text-gray-700 hover:bg-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+              </a>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Time Table
+                  </h1>
+                  <p className="text-sm text-gray-600">Manage your daily schedule and activities</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-4 sm:px-6 lg:px-8 py-8">
+      <main>
         <TimetableClient
           user={user}
           profile={profile}
