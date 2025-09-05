@@ -148,7 +148,7 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                     <p className="text-xs sm:text-sm text-gray-600">Shared Deadline (Demo)</p>
                   </div>
                 </div>
-                <Link href="/">
+                <Link href="https://v0-deadline-mate-landing-page.vercel.app/dashboard">
                   <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
                     <span className="hidden sm:inline">Try DeadlineMate</span>
                     <span className="sm:hidden">Try App</span>
@@ -733,7 +733,7 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
                   <p className="text-xs sm:text-sm text-gray-600">Shared Deadline</p>
                 </div>
               </div>
-              <Link href="/">
+              <Link href="https://v0-deadline-mate-landing-page.vercel.app/dashboard">
                 <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
                   <span className="hidden sm:inline">Try DeadlineMate</span>
                   <span className="sm:hidden">Try App</span>

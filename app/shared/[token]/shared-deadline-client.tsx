@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { createClient } from "@/utils/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -15,8 +15,10 @@ import {
   Timer,
   ArrowRight,
   Target,
+  Plus
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 
 interface SharedDeadlineClientProps {
   token: string
@@ -50,6 +52,10 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
   const [sharedDeadline, setSharedDeadline] = useState<SharedDeadline | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const shouldAutoAdd = useMemo(() => searchParams?.get("autoAdd") === "1", [searchParams])
 
   useEffect(() => {
     async function fetchSharedDeadline() {
@@ -127,6 +133,55 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
 
     fetchSharedDeadline()
   }, [token])
+
+  // Auto-add flow after login
+  useEffect(() => {
+    if (!shouldAutoAdd || !sharedDeadline || adding) return
+    void handleAddToMyDeadlines()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldAutoAdd, sharedDeadline])
+
+  async function handleAddToMyDeadlines() {
+    try {
+      setAdding(true)
+      const supabase = createClient()
+      const { data: userRes } = await supabase.auth.getUser()
+
+      if (!userRes?.user) {
+        // Redirect to auth and come back to auto-add
+        const redirect = encodeURIComponent(`/shared/${token}?autoAdd=1`)
+        router.push(`/auth?redirect=${redirect}`)
+        return
+      }
+
+      const deadline = sharedDeadline!.deadlines
+
+      const { error: insertError } = await supabase.from("deadlines").insert({
+        user_id: userRes.user.id,
+        title: deadline.title,
+        description: deadline.description,
+        due_date: deadline.due_date,
+        priority: deadline.priority,
+        status: deadline.status,
+        category: deadline.category,
+        project_link: deadline.project_link,
+      })
+
+      if (insertError) {
+        console.error("Insert error:", insertError)
+        setError(insertError.message)
+        return
+      }
+
+      // Go to dashboard after success
+      router.push("https://v0-deadline-mate-landing-page.vercel.app/dashboard")
+    } catch (err: any) {
+      console.error("Add to my deadlines failed:", err)
+      setError(err?.message ?? "Failed to add deadline")
+    } finally {
+      setAdding(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -309,13 +364,19 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
                 <p className="text-xs sm:text-sm text-gray-600">Shared Deadline</p>
               </div>
             </div>
-            <Link href="/">
+            <div className="flex items-center gap-2">
+              <Button onClick={handleAddToMyDeadlines} size="sm" className="text-xs sm:text-sm">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                {adding ? "Adding..." : "Add to My Deadlines"}
+              </Button>
+              <Link href="https://v0-deadline-mate-landing-page.vercel.app/dashboard">
               <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
                 <span className="hidden sm:inline">Try DeadlineMate</span>
                 <span className="sm:hidden">Try App</span>
                 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
               </Button>
-            </Link>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
