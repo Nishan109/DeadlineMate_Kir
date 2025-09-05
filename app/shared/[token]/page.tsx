@@ -602,7 +602,7 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     const now = new Date()
     const isOverdue = dueDate < now && deadline.status !== "completed"
     const timeUntilDue = dueDate.getTime() - now.getTime()
-    const daysUntilDue = Math.ceil(timeUntilDue / (1000 * 60 * 60 * 24))
+    const daysUntilDue = Math.floor(timeUntilDue / (1000 * 60 * 60 * 24))
     
     // Create a date formatter for Asia/Kolkata timezone
     const kolkataFormatter = new Intl.DateTimeFormat('en-IN', {
