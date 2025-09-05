@@ -89,13 +89,19 @@ export default function LandingPage() {
               Get Started Free
               <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
             </LoadingButton>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-transparent"
+            <a
+              href="https://youtu.be/24qRnJKcNMs?si=RBsRtvmw7_atwsyr"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Watch Demo
-            </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-transparent"
+              >
+                Watch Demo
+              </Button>
+            </a>
           </div>
           <p className="text-xs sm:text-sm text-gray-500">Free forever • No credit card required • 2-minute setup</p>
         </div>
