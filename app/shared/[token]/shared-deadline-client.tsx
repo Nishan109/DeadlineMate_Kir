@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import AddToMyDeadlinesButton from "./AddToMyDeadlinesButton"
 
 interface SharedDeadlineClientProps {
   token: string
@@ -234,8 +235,13 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
   const dueDate = new Date(deadline.due_date)
   const now = new Date()
   const isOverdue = dueDate < now && deadline.status !== "completed"
-  const timeUntilDue = dueDate.getTime() - now.getTime()
-  const daysUntilDue = Math.floor(timeUntilDue / (1000 * 60 * 60 * 24))
+  // Calculate days until due using Asia/Kolkata calendar days to avoid off-by-one
+  const kolkataNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const kolkataDue = new Date(new Date(deadline.due_date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const dStart = startOfDay(kolkataDue).getTime()
+  const nStart = startOfDay(kolkataNow).getTime()
+  const daysUntilDue = Math.round((dStart - nStart) / (1000 * 60 * 60 * 24))
   
   // Create a date formatter for Asia/Kolkata timezone
   const kolkataFormatter = new Intl.DateTimeFormat('en-IN', {
@@ -365,10 +371,7 @@ export default function SharedDeadlineClient({ token }: SharedDeadlineClientProp
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleAddToMyDeadlines} size="sm" className="text-xs sm:text-sm">
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                {adding ? "Adding..." : "Add to My Deadlines"}
-              </Button>
+              <AddToMyDeadlinesButton token={token} deadline={deadline} />
               <Link href="https://v0-deadline-mate-landing-page.vercel.app/dashboard">
               <Button variant="outline" size="sm" className="bg-transparent text-xs sm:text-sm">
                 <span className="hidden sm:inline">Try DeadlineMate</span>

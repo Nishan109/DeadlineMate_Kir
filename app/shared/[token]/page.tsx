@@ -601,8 +601,13 @@ export default async function SharedDeadlinePage({ params }: PageProps) {
     const dueDate = new Date(deadline.due_date)
     const now = new Date()
     const isOverdue = dueDate < now && deadline.status !== "completed"
-    const timeUntilDue = dueDate.getTime() - now.getTime()
-    const daysUntilDue = Math.floor(timeUntilDue / (1000 * 60 * 60 * 24))
+    // Calculate days until due using Asia/Kolkata calendar days to avoid off-by-one
+    const kolkataNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const kolkataDue = new Date(new Date(deadline.due_date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const dStart = startOfDay(kolkataDue).getTime()
+    const nStart = startOfDay(kolkataNow).getTime()
+    const daysUntilDue = Math.round((dStart - nStart) / (1000 * 60 * 60 * 24))
     
     // Create a date formatter for Asia/Kolkata timezone
     const kolkataFormatter = new Intl.DateTimeFormat('en-IN', {
