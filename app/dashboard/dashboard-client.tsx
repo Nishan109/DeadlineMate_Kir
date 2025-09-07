@@ -706,12 +706,12 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
               filteredDeadlines.map((deadline) => (
                 <Card
                   key={deadline.id}
-                  className={`border-l-4 ${getPriorityColor(deadline.priority)} bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+                  className={`border-l-4 ${getPriorityColor(deadline.priority)} bg-white shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 sm:hover:-translate-y-1 rounded-lg`}
                 >
-                  <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
-                    <div className="flex items-start justify-between gap-2">
+                  <CardHeader className="pb-2 p-2 sm:pb-3 sm:p-6">
+                    <div className="flex items-start justify-between gap-1 sm:gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start space-x-2 sm:space-x-3 mb-2">
+                        <div className="flex items-start space-x-1.5 sm:space-x-3 mb-1.5 sm:mb-2">
                           <button
                             onClick={() => toggleDeadlineStatus(deadline.id)}
                             className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 mt-0.5 hover:scale-110 ${
@@ -734,7 +734,7 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
                           </div>
                         </div>
                         {deadline.description && (
-                          <CardDescription className="ml-7 sm:ml-9 text-xs sm:text-sm text-gray-600">
+                          <CardDescription className="ml-7 sm:ml-9 text-xs sm:text-sm text-gray-600 line-clamp-2">
                             {deadline.description}
                           </CardDescription>
                         )}
@@ -772,14 +772,14 @@ export default function DashboardClient({ user, initialDeadlines = [], isDemoMod
                       </DropdownMenu>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-600 ml-7 sm:ml-9 gap-2">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                        <span className="flex items-center bg-gray-100 px-2 py-1 rounded-lg">
+                  <CardContent className="pt-0 p-2 sm:p-6 sm:pt-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-600 ml-7 sm:ml-9 gap-1.5 sm:gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-4">
+                        <span className="flex items-center bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg">
                           <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           {format(new Date(deadline.due_date), "MMM dd, yyyy")}
                         </span>
-                        <span className="flex items-center bg-gray-100 px-2 py-1 rounded-lg">
+                        <span className="flex items-center bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg">
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           {format(new Date(deadline.due_date), "h:mm a")}
                         </span>
